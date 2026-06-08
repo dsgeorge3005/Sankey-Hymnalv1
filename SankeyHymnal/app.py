@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify, send_from_directory
 import json
 import os
 
-app = Flask(__name__, template_folder='.')
+app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Load data files
