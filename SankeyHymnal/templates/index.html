@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sankey Hymnal</title>
+
+    <style>
+    body{
+        font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;
+        background:#f5f5f7;
+        margin:0;
+        padding:20px;
+        transition: background 0.3s, color 0.3s;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    .container{
+        max-width:900px;
+        margin:auto;
+    }
+
+    h1{
+        text-align:center;
+        font-size:36px;
+        margin-bottom:20px;
+    }
+
+    .search-bar{
+        display:flex;
+        gap:10px;
+    }
+
+    input, textarea, select{
+        flex:1;
+        padding:14px;
+        border:none;
+        border-radius:16px;
+        font-size:16px;
+        box-shadow:0 2px 10px rgba(0,0,0,.08);
+        font-family: inherit;
+        min-width: 0;
+    }
+
+    textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    button{
+        background:black;
+        color:white;
+        border:none;
+        padding:12px 20px;
+        border-radius:12px;
+        cursor:pointer;
+        font-size:16px;
+        transition: background 0.2s, color 0.2s;
+        white-space: nowrap;
+    }
+
+    button:hover{
+        opacity:.9;
+    }
+
+    /* Weekly Dashboard Styling */
+    .dashboard-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out, margin-bottom 0.3s ease-out;
+        margin-bottom: 0;
+    }
+
+    .dashboard-content.open {
+        max-height: 800px; 
+        margin-bottom: 25px;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    @media (max-width: 600px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+        h1 { font-size: 32px; }
+        body { padding: 15px; }
+    }
+
+    .dash-box {
+        background: white;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,.04);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        transition: background 0.3s;
+    }
+
+    .dash-box h3 { margin: 0 0 5px 0; }
+
+    /* --- SIDE MUSICAL DRAWER SYSTEM --- */
+    .side-drawer {
+        position: fixed;
+        top: 0;
+        right: -390px; 
+        width: 360px;
+        height: 100%;
+        background: white;
+        box-shadow: -5px 0 25px rgba(0,0,0,0.15);
+        z-index: 1000;
+        transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        box-sizing: border-box;
+    }
+
+    .side-drawer.open {
+        right: 0;
+    }
+
+    .drawer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+    }
+
+    .drawer-header h2 { margin: 0; font-size: 22px; }
+
+    /* Keyboard Section */
+    .keyboard-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .piano-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .piano {
+        display: flex;
+        position: relative;
+        height: 120px;
+        background: #000;
+        padding: 2px;
+        border-radius: 8px;
+        user-select: none;
+    }
+    .white-key {
+        flex: 1;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 0 0 4px 4px;
+        cursor: pointer;
+        z-index: 1;
+    }
+    .white-key:active { background: #e5e5e5; }
+    .black-key {
+        position: absolute;
+        width: 6%;
+        height: 60%;
+        background: black;
+        border-radius: 0 0 3px 3px;
+        cursor: pointer;
+        z-index: 2;
+        transform: translateX(-50%);
+    }
+    .black-key:active { background: #333; }
+
+    /* Metronome Section */
+    .metronome-box {
+        background: #f5f5f7;
+        padding: 15px;
+        border-radius: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .metro-display {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: bold;
+    }
+    .metro-visuals {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin: 5px 0;
+        flex-wrap: wrap;
+    }
+    .metro-dot {
+        width: 10px;
+        height: 10px;
+        background: #ccc;
+        border-radius: 50%;
+        transition: background 0.08s, transform 0.08s;
+    }
+    .metro-dot.active { background: #ff3b30; transform: scale(1.3); }
+
+    /* Glossary Section */
+    .glossary-box {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 240px;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+    .term-item {
+        border-bottom: 1px solid #eee;
+        padding: 8px 0;
+    }
+    .term-name { font-weight: 600; color: #111; }
+    .term-def { font-size: 14px; color: #666; margin-top: 2px; }
+
+    /* Base App Search Components */
+    #suggestions{
+        background:white;
+        border-radius:16px;
+        margin-top:10px;
+        overflow:hidden;
+        box-shadow:0 5px 20px rgba(0,0,0,.08);
+        max-height: 250px;
+        overflow-y: auto;
+    }
+
+    .suggestion{
+        padding:14px 18px;
+        cursor:pointer;
+        border-bottom:1px solid #eee;
+        transition: background 0.15s ease;
+    }
+
+    .suggestion:hover{ background:#f5f5f7; }
+    .suggestion.selected { background: #e8e8ed; }
+
+    .card{
+        background:white;
+        margin-top:20px;
+        padding:20px;
+        border-radius:24px;
+        box-shadow:0 10px 30px rgba(0,0,0,.08);
+        transition: background 0.3s;
+    }
+
+    .actions{
+        margin-top:15px;
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+    }
+
+    .actions button, .actions a {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    img{
+        width:100%;
+        height: auto;
+        border-radius:16px;
+        margin-top:15px;
+    }
+
+    a{ text-decoration:none; display: inline-block; }
+    #scoreViewer{ margin-top:20px; }
+    .audio-section{ margin-top:20px; }
+    .audio-section h3{ margin-bottom:15px; }
+    .audio-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:15px; }
+    .audio-card{ background:#fafafa; border-radius:18px; padding:15px; box-shadow:0 2px 8px rgba(0,0,0,.06); transition: background 0.3s; }
+    .voice-part{ font-weight:600; font-size:16px; margin-bottom:10px; }
+    .audio-card audio{ width:100%; }
+
+    /* Dark Mode Styling Layers */
+    .dark-mode{ background:#111; color:white; }
+    .dark-mode .card, .dark-mode .dash-box, .dark-mode .side-drawer { background:#1c1c1e; color:white; }
+    .dark-mode input, .dark-mode textarea, .dark-mode select { background:#2c2c2e; color:white; }
+    .dark-mode .dashboard-toggle { background: #2c2c2e; color: white; }
+    .dark-mode #suggestions{ background:#1c1c1e; }
+    .dark-mode .suggestion{ border-color:#333; }
+    .dark-mode .suggestion:hover{ background:#2c2c2e; }
+    .dark-mode .suggestion.selected { background: #3a3a3c; }
+    .dark-mode .audio-card, .dark-mode .metronome-box { background:#2c2c2e; }
+    .dark-mode button { background:white; color:black; }
+    .dark-mode .drawer-header, .dark-mode .term-item { border-color: #333; }
+    .dark-mode .term-name { color: #fff; }
+    .dark-mode .term-def { color: #aaa; }
+    </style>
+</head>
+
+<body>
+
+<!-- THE SIDE MUSICAL DRAWER -->
+<div id="musicalDrawer" class="side-drawer">
+    <div class="drawer-header">
+        <h2>🎼 Musician Toolkit</h2>
+        <button onclick="toggleDrawer()" style="padding: 6px 12px; font-size:14px;">← Go Back</button>
+    </div>
+
+    <!-- 1. Keyboard Section -->
+    <div class="keyboard-container">
+        <div class="piano-controls">
+            <button onclick="shiftOctave(-1)">◀ Octave</button>
+            <span id="octaveDisplay" style="font-weight:bold;">Octave: 4</span>
+            <button onclick="shiftOctave(1)">Octave ▶</button>
+        </div>
+        <div class="piano" id="pianoLayout">
+            <div class="white-key" onclick="playTone('C')"></div>
+            <div class="white-key" onclick="playTone('D')"></div>
+            <div class="white-key" onclick="playTone('E')"></div>
+            <div class="white-key" onclick="playTone('F')"></div>
+            <div class="white-key" onclick="playTone('G')"></div>
+            <div class="white-key" onclick="playTone('A')"></div>
+            <div class="white-key" onclick="playTone('B')"></div>
+            <div class="white-key" onclick="playTone('C2')"></div>
+            <div class="black-key" style="left: 12.5%;" onclick="playTone('C#')"></div>
+            <div class="black-key" style="left: 26.5%;" onclick="playTone('D#')"></div>
+            <div class="black-key" style="left: 53.5%;" onclick="playTone('F#')"></div>
+            <div class="black-key" style="left: 67.5%;" onclick="playTone('G#')"></div>
+            <div class="black-key" style="left: 81.5%;" onclick="playTone('A#')"></div>
+        </div>
+    </div>
+
+    <!-- 2. Rebuilt Advanced Metronome -->
+    <div class="metronome-box">
+        <div class="metro-display">
+            <span>Metronome</span>
+            <span id="bpmDisplay">100 BPM</span>
+        </div>
+        <input type="range" id="tempoSlider" min="40" max="220" value="100" oninput="updateBpm(this.value)">
+        
+        <div style="display:flex; gap:10px; align-items:center; margin-top:5px;">
+            <span style="font-size:14px; font-weight:600;">Time Sig:</span>
+            <select id="timeSignatureSelect" onchange="updateTimeSignature(this.value)" style="padding:6px; font-size:14px; border-radius:8px;">
+                <option value="4">4/4 Common Time</option>
+                <option value="3">3/4 Waltz Meter</option>
+                <option value="2">2/4 March Meter</option>
+                <option value="2_cut">2/2 Cut Time (Alla Breve)</option>
+                <option value="3_8">3/8 Simple Triple</option>
+                <option value="6">6/8 Compound Duple</option>
+                <option value="9">9/8 Compound Triple</option>
+                <option value="12">12/8 Compound Quadruple</option>
+                <option value="5">5/4 Asymmetric Meter</option>
+                <option value="7">7/4 Asymmetric Meter</option>
+            </select>
+        </div>
+
+        <div class="metro-visuals" id="metroVisualsContainer">
+            <!-- Dynamic elements loaded via JavaScript -->
+        </div>
+        <button id="metroBtn" onclick="toggleMetronome()" style="width:100%;">▶ Start</button>
+    </div>
+
+    <!-- 3. Glossary Section with Complete Live Filter Search -->
+    <div>
+        <h3 style="margin-top:0; margin-bottom:10px;">📚 Reference Dictionary</h3>
+        <input type="text" id="glossarySearch" placeholder="Search terms (e.g., crotchet, adagio)..." oninput="filterGlossary(this.value)" style="width:100%; padding:10px; font-size:14px; border-radius:10px; margin-bottom:10px; box-sizing: border-box;">
+        <div class="glossary-box" id="glossaryList">
+            <!-- Populated runtime dynamically -->
+        </div>
+    </div>
+</div>
+
+<!-- CONTAINER LAYOUT -->
+<div class="container">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <button onclick="toggleDashboard()" style="padding: 10px 15px;">🗓️ Weekly Plan</button>
+        <div style="display:flex; gap:10px;">
+            <button onclick="toggleDrawer()" style="background:#007aff; color:white;">🎵 Music Tools</button>
+            <button onclick="toggleTheme()">🌓 Theme</button>
+        </div>
+    </div>
+
+    <div id="weeklyDashboard" class="dashboard-content">
+        <div class="dashboard-grid">
+            <div class="dash-box">
+                <h3>📖 This Week's Hymns</h3>
+                <textarea id="weeklyNotes" placeholder="Type chosen songs here..."></textarea>
+            </div>
+            <div class="dash-box">
+                <h3>📅 Service Date Selector</h3>
+                <input type="date" id="calendarPicker">
+            </div>
+        </div>
+    </div>
+
+    <h1>Sankey Hymnal</h1>
+
+    <div class="search-bar">
+        <input id="searchBox" placeholder="Search hymn number or title">
+        <button onclick="searchHymn()">Search</button>
+    </div>
+    
+    <div id="suggestions"></div>
+    <div id="results"></div>
+    <div id="scoreViewer"></div>
+</div>
+
+<script>
+// Exhaustive Musical Terms & Time Signature Database
+const glossaryTerms = [
+    /* Time Signatures & Structure Rules */
+    { name: "4/4 Time (Common Time)", def: "4 beats per measure. Each quarter note gets 1 count. The structural default pulse." },
+    { name: "3/4 Time (Waltz Meter)", def: "3 beats per measure. Used heavily in classical waltzes and historic hymns." },
+    { name: "2/4 Time (March Meter)", def: "2 beats per measure. Strong-weak regular alternating stride pulse." },
+    { name: "2/2 Time (Cut Time / Alla Breve)", def: "2 beats per measure, but the half note gets the beat count. Streamlines fast pieces." },
+    { name: "6/8 Time", def: "Compound meter with 2 primary macro-pulses, each dividing into three eighth notes (3+3 layout)." },
+    { name: "9/8 Time", def: "Compound triple meter with 3 primary pulses, totaling 9 eighth notes per bar." },
+    { name: "12/8 Time", def: "Compound quadruple meter with 4 primary pulses. Heavy rolling gospel rhythm vibe." },
+    { name: "5/4 Time", def: "An asymmetric irregular meter counted in unbalanced clusters of 3+2 or 2+3." },
+    { name: "7/4 Time", def: "An asymmetric irregular complex meter broken down into groups of 4+3 or 2+2+3." },
+    
+    /* Durations & Notes */
+    { name: "Semibreve (Whole Note)", def: "Lasts for 4 beats in standard 4/4 common arrangements." },
+    { name: "Minim (Half Note)", def: "Lasts for exactly 2 beats." },
+    { name: "Crotchet (Quarter Note)", def: "Lasts for exactly 1 fundamental beat." },
+    { name: "Quaver (Eighth Note)", def: "Lasts for half (1/2) of a single standard crotchet beat count." },
+    { name: "Semiquaver (Sixteenth Note)", def: "Lasts for a quarter (1/4) of a single standard beat." },
+    { name: "Demisemiquaver", def: "A thirty-second note. An exceptionally fast structural value (1/8 of a beat)." },
+    { name: "Breve", def: "A double whole note value lasting 8 full counts. Common in historical scores." },
+    { name: "Triplet", def: "Three notes compressed together to fit the standard playing time of two notes." },
+
+    /* Tempo Markings */
+    { name: "Grave", def: "Extremely slow, solemn, weighty and deep pacing framework (25-45 BPM)." },
+    { name: "Largo", def: "Broad, stately, and very slow performance pacing (40-60 BPM)." },
+    { name: "Adagio", def: "Slow, tranquil, expressive, and comfortable ease tempo (66-76 BPM)." },
+    { name: "Andante", def: "A moderate, unhurried, literal 'walking pace' configuration (76-108 BPM)." },
+    { name: "Moderato", def: "Moderately paced; smack in the center of fast and slow (108-120 BPM)." },
+    { name: "Allegro", def: "Fast, bright, cheerful, and lively execution speed (120-156 BPM)." },
+    { name: "Vivace", def: "Highly brisk, energetic, and rapid execution frame (~156-176 BPM)." },
+    { name: "Presto", def: "Extremely fast, sprint-like tempo configuration (168-200+ BPM)." },
+    { name: "Ritardando (Rit.)", def: "Gradually slowing down the speed performance pacing." },
+    { name: "Rallentando (Rall.)", def: "Gradually slowing down, but typically roomier and more deliberate than a Ritardando." },
+    { name: "Accelerando", def: "Gradually speeding up the tempo execution frame." },
+    { name: "A Tempo", def: "Instantly return to the original initial baseline song speed." },
+    { name: "Rubato", def: "Flexible, expressive manipulation of time by stretching and compressing the tempo." },
+
+    /* Dynamics & Volume */
+    { name: "Pianissimo (pp)", def: "Perform the notes extremely softly and quietly." },
+    { name: "Piano (p)", def: "Perform the notes softly." },
+    { name: "Mezzo Piano (mp)", def: "Moderately soft dynamic volume layout." },
+    { name: "Mezzo Forte (mf)", def: "Moderately loud; standard target for common congregation singing." },
+    { name: "Forte (f)", def: "Sing or play loudly and with firm strength." },
+    { name: "Fortissimo (ff)", def: "Sing or play exceptionally loudly." },
+    { name: "Crescendo (<)", def: "Gradually increasing the dynamic volume levels." },
+    { name: "Decrescendo (>)", def: "Gradually decreasing the dynamic volume levels." },
+    { name: "Sforzando (sfz)", def: "Sudden, loud, fierce accentuation focused on a single note or chord." },
+
+    /* Articulation & Systems */
+    { name: "Legato", def: "Notes sung smoothly and linked seamlessly together without air gaps." },
+    { name: "Staccato", def: "Notes played short, bouncy, and detached cleanly from each other." },
+    { name: "Fermata", def: "Hold or sustain the note indefinitely until cut off by the leader." },
+    { name: "Tenuto", def: "Hold the note out for its exact absolute value while giving it slight weight." },
+    { name: "Glissando", def: "A seamless continuous slide upwards or downwards between two distinct pitches." },
+    { name: "Cantabile", def: "In a flowing, lyrical, song-like graceful performance delivery style." },
+    { name: "Maestoso", def: "Majestically, grandly, and with stately configuration elegance." },
+    { name: "Da Capo (D.C.)", def: "Structural command to immediately jump back to the very beginning of the song." },
+    { name: "Dal Segno (D.S.)", def: "Structural command to repeat music starting back from the 'Sign' marker." },
+    { name: "Fine", def: "Indicates the absolute true conclusion and endpoint of the entire song." },
+    { name: "Coda", def: "An expanded closing section or custom musical outro layout." }
+];
+
+// Audio Pitch Synth Engine
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let activeOctave = 4;
+const baseFrequencies = {
+    'C': 16.35, 'C#': 17.32, 'D': 18.35, 'D#': 19.45, 'E': 20.60,
+    'F': 21.83, 'F#': 23.12, 'G': 24.50, 'G#': 25.96, 'A': 27.50, 'A#': 29.14, 'B': 30.87, 'C2': 32.70
+};
+
+function playTone(note) {
+    let freq = baseFrequencies[note] * Math.pow(2, activeOctave);
+    let osc = audioCtx.createOscillator();
+    let gainNode = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 1.2);
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 1.2);
+}
+
+function shiftOctave(direction) {
+    activeOctave += direction;
+    if (activeOctave < 2) activeOctave = 2;
+    if (activeOctave > 6) activeOctave = 6;
+    document.getElementById("octaveDisplay").innerText = "Octave: " + activeOctave;
+}
+
+function toggleDrawer() {
+    document.getElementById("musicalDrawer").classList.toggle("open");
+}
+
+// Metronome Matrix Configuration Engine
+let metroInterval = null;
+let isMetroRunning = false;
+let bpm = 100;
+let currentBeat = 0;
+let beatsPerMeasure = 4;
+let timingFactor = 1.0;
+
+function updateBpm(val) {
+    bpm = val;
+    document.getElementById("bpmDisplay").innerText = val + " BPM";
+    if (isMetroRunning) { stopMetronome(); startMetronome(); }
+}
+
+function updateTimeSignature(val) {
+    // Standardize mapping configuration across odd meters
+    if (val === "2_cut") { beatsPerMeasure = 2; timingFactor = 2.0; } 
+    else if (val === "3_8") { beatsPerMeasure = 3; timingFactor = 0.5; }
+    else if (val === "6") { beatsPerMeasure = 6; timingFactor = 0.5; }
+    else if (val === "9") { beatsPerMeasure = 9; timingFactor = 0.5; }
+    else if (val === "12") { beatsPerMeasure = 12; timingFactor = 0.5; }
+    else { beatsPerMeasure = parseInt(val); timingFactor = 1.0; }
+    
+    currentBeat = 0;
+    const container = document.getElementById("metroVisualsContainer");
+    let html = "";
+    for(let i = 0; i < beatsPerMeasure; i++) {
+        html += `<div class="metro-dot" id="dotM${i}"></div>`;
+    }
+    container.innerHTML = html;
+
+    if (isMetroRunning) { stopMetronome(); startMetronome(); }
+}
+
+function toggleMetronome() {
+    if (isMetroRunning) { stopMetronome(); } else { startMetronome(); }
+}
+
+function startMetronome() {
+    isMetroRunning = true;
+    document.getElementById("metroBtn").innerText = "⏹ Stop";
+    document.getElementById("metroBtn").style.background = "#ff3b30";
+    
+    // Formula sets base delays mapped to standard note values
+    const intervalMs = ((60 / bpm) * 1000) * timingFactor;
+    
+    metroInterval = setInterval(() => {
+        for(let i=0; i<beatsPerMeasure; i++){
+            let d = document.getElementById(`dotM${i}`);
+            if(d) d.classList.remove('active');
+        }
+        
+        let targetDot = document.getElementById(`dotM${currentBeat}`);
+        if(targetDot) targetDot.classList.add('active');
+        
+        let osc = audioCtx.createOscillator();
+        let gainNode = audioCtx.createGain();
+        
+        // Primary downbeat accent frequency vs alternate ticks
+        osc.frequency.setValueAtTime(currentBeat === 0 ? 1150 : 680, audioCtx.currentTime); 
+        gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.06);
+        
+        currentBeat = (currentBeat + 1) % beatsPerMeasure;
+    }, intervalMs);
+}
+
+function stopMetronome() {
+    isMetroRunning = false;
+    clearInterval(metroInterval);
+    document.getElementById("metroBtn").innerText = "▶ Start";
+    document.getElementById("metroBtn").style.background = "";
+    for(let i=0; i<beatsPerMeasure; i++){
+        let d = document.getElementById(`dotM${i}`);
+        if(d) d.classList.remove('active');
+    }
+    currentBeat = 0;
+}
+
+// Live Glossary Filter Functions
+function populateGlossary(list) {
+    const box = document.getElementById("glossaryList");
+    let html = "";
+    list.forEach(term => {
+        html += `<div class="term-item"><div class="term-name">${term.name}</div><div class="term-def">${term.def}</div></div>`;
+    });
+    box.innerHTML = html || `<div style="font-size:14px; color:#999; padding:10px 0;">No matching terms found.</div>`;
+}
+
+function filterGlossary(query) {
+    const clean = query.toLowerCase().trim();
+    const filtered = glossaryTerms.filter(t => t.name.toLowerCase().includes(clean) || t.def.toLowerCase().includes(clean));
+    populateGlossary(filtered);
+}
+
+// Core App Init Lifecycle
+window.onload = function(){
+    if(localStorage.getItem("theme") === "dark"){
+        document.body.classList.add("dark-mode");
+    }
+    document.getElementById("weeklyNotes").value = localStorage.getItem("weeklyHymnsNotes") || "";
+    document.getElementById("calendarPicker").value = localStorage.getItem("weeklyHymnsDate") || "";
+    if(localStorage.getItem("dashboardOpen") === "true") {
+        document.getElementById("weeklyDashboard").classList.add("open");
+    }
+    
+    updateTimeSignature("4");
+    populateGlossary(glossaryTerms);
+};
+
+const searchBox = document.getElementById("searchBox");
+const suggestionsBox = document.getElementById("suggestions");
+let currentFocus = -1;
+let currentPage = 1;
+
+document.getElementById("weeklyNotes").addEventListener("input", function() {
+    localStorage.setItem("weeklyHymnsNotes", this.value);
+});
+document.getElementById("calendarPicker").addEventListener("change", function() {
+    localStorage.setItem("weeklyHymnsDate", this.value);
+});
+
+function toggleDashboard() {
+    const dash = document.getElementById("weeklyDashboard");
+    dash.classList.toggle("open");
+    localStorage.setItem("dashboardOpen", dash.classList.contains("open"));
+}
+
+function toggleTheme(){
+    document.body.classList.toggle("dark-mode");
+    const dark = document.body.classList.contains("dark-mode");
+    localStorage.setItem("theme", dark ? "dark" : "light");
+}
+
+searchBox.addEventListener("keydown", function(event){
+    const items = suggestionsBox.getElementsByClassName("suggestion");
+    if (event.key === "ArrowDown") {
+        event.preventDefault(); currentFocus++; addActive(items);
+    } else if (event.key === "ArrowUp") {
+        event.preventDefault(); currentFocus--; addActive(items);
+    } else if (event.key === "Enter") {
+        event.preventDefault();
+        if (currentFocus > -1 && items[currentFocus]) { items[currentFocus].click(); } 
+        else { suggestionsBox.innerHTML = ""; searchHymn(); }
+    }
+});
+
+searchBox.addEventListener("input", showSuggestions);
+document.addEventListener("click", function (e) {
+    if (e.target !== searchBox && e.target !== suggestionsBox) { suggestionsBox.innerHTML = ""; }
+});
+
+async function showSuggestions(){
+    const query = searchBox.value.trim();
+    currentFocus = -1;
+    if(query.length < 2){ suggestionsBox.innerHTML = ""; return; }
+    try {
+        const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        let html = "";
+        data.slice(0,10).forEach(hymn => {
+            const safeTitle = hymn.title.replace(/'/g, "\\'");
+            html += `
+                <div class="suggestion" onclick="selectHymn('${hymn.number}','${safeTitle}')">
+                    <strong>${hymn.number}</strong> — ${hymn.title}
+                </div>`;
+        });
+        suggestionsBox.innerHTML = html;
+    } catch(err) { console.error(err); }
+}
+
+function selectHymn(number, title){
+    searchBox.value = number;
+    suggestionsBox.innerHTML = "";
+    searchHymn();
+}
+
+function addActive(items) {
+    if (!items || items.length === 0) return;
+    removeActive(items);
+    if (currentFocus >= items.length) currentFocus = 0;
+    if (currentFocus < 0) currentFocus = items.length - 1;
+    items[currentFocus].classList.add("selected");
+    items[currentFocus].scrollIntoView({ block: "nearest" });
+}
+
+function removeActive(items) {
+    for (let i = 0; i < items.length; i++) { items[i].classList.remove("selected"); }
+}
+
+function quickLoad(number) {
+    searchBox.value = number;
+    suggestionsBox.innerHTML = "";
+    document.getElementById("scoreViewer").innerHTML = "";
+    searchHymn();
+}
+
+async function searchHymn(){
+    const query = searchBox.value.trim();
+    if(!query) return;
+
+    const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+    const data = await response.json();
+    let html = "";
+
+    if(data.length === 0){
+        html = "<div class='card'>No hymns found.</div>";
+    }else{
+        data.forEach(hymn => {
+            const yt = "https://www.youtube.com/results?search_query=" + encodeURIComponent(hymn.title + " hymn");
+            let audioHtml = "";
+            if(hymn.audio && Object.keys(hymn.audio).length){
+                audioHtml = `<div class="audio-section"><h3>🎵 Recordings</h3><div class="audio-grid">`;
+                for(const [part,file] of Object.entries(hymn.audio)){
+                    audioHtml += `<div class="audio-card"><div class="voice-part">${part}</div><audio controls><source src="/audio/${file}" type="audio/mpeg"></audio></div>`;
+                }
+                audioHtml += `</div></div>`;
+            }
+
+            html += `
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    ${hymn.prev_hymn ? `<button onclick="quickLoad('${hymn.prev_hymn}')">← ${hymn.prev_hymn}</button>` : '<span></span>'}
+                    ${hymn.next_hymn ? `<button onclick="quickLoad('${hymn.next_hymn}')">${hymn.next_hymn} →</button>` : '<span></span>'}
+                </div>
+                <h2>${hymn.number} - ${hymn.title}</h2>
+                <p>Page ${hymn.page}</p>
+                <div class="actions">
+                    <button onclick="showScore(${hymn.page})">View Score</button>
+                    <a target="_blank" href="${yt}"><button style="width:100%;">YouTube</button></a>
+                </div>
+                ${audioHtml}
+            </div>`;
+        });
+    }
+    document.getElementById("results").innerHTML = html;
+}
+
+function showScore(page){ currentPage = page; renderPage(); }
+
+function renderPage(){
+    document.getElementById("scoreViewer").innerHTML = `
+        <div class="card">
+            <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
+                <button onclick="previousPage()">← Previous</button>
+                <button disabled>Page ${currentPage}</button>
+                <button onclick="nextPage()">Next →</button>
+            </div>
+            <img src="/static/pages/Sankey_${currentPage}.jpg" alt="Page ${currentPage}">
+        </div>`;
+    document.getElementById("scoreViewer").scrollIntoView({ behavior:"smooth" });
+}
+
+function nextPage(){ currentPage++; renderPage(); }
+function previousPage(){ if(currentPage > 1){ currentPage--; renderPage(); } }
+</script>
+</body>
+</html>
