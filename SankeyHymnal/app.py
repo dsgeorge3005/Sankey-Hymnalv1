@@ -30,27 +30,47 @@ def search():
         ):
             hymn_copy = hymn.copy()
 
-            # Calculate page ranges dynamically
-            start_page = int(hymn["page"])
-            end_page = start_page
+            # -------------------------------------------------------------
+            # 📐 BULLETPROOF PAGE-RANGE CALCULATION ENGINE
+            # -------------------------------------------------------------
+            try:
+                start_page = int(hymn["page"])
+                end_page = start_page
 
-            for h in hymns:
-                if int(h["number"]) > int(hymn["number"]):
-                    end_page = int(h["page"]) - 1
-                    break
+                # Look ahead to determine where this hymn's sheet pages cut off
+                for h in hymns:
+                    if int(h["number"]) > int(hymn["number"]):
+                        end_page = int(h["page"]) - 1
+                        break
 
-            pages = list(range(start_page, end_page + 1))
-            hymn_copy["pages"] = pages
+                # Guardrail: If calculation runs backward or gaps over 5 pages, clamp it
+                if end_page < start_page or (end_page - start_page) > 5:
+                    end_page = start_page
+
+                pages = list(range(start_page, end_page + 1))
+            except (ValueError, KeyError, TypeError):
+                # Emergency structure fallback
+                pages = [hymn.get("page", hymn["number"])]
 
             # -------------------------------------------------------------
-            # 🖼️ GENERATE WEBLINKS FOR IMAGES INSIDE THE pages2 FOLDER
+            # 🖼️ SMART FILE ROUTING PATH GENERATOR
             # -------------------------------------------------------------
-            # This loops over your calculated page numbers and generates a 
-            # safe web URL pointing to your 'static/pages2/' folder for each page.
             image_urls = []
             for p in pages:
-                # Generates a path like '/static/pages2/1.png'
-                img_url = url_for('static', filename=f"pages2/{p}.png")
+                # Target path based on standard dynamic page numbers
+                page_file = f"pages2/{p}.png"
+                page_path = os.path.join(BASE_DIR, "static", page_file)
+
+                # DUAL PATH CHECK: If the page-numbered image file does not physically exist, 
+                # or if this is an older file named by Hymn Number (e.g., 1.png), map to Hymn Number instead!
+                if not os.path.exists(page_path):
+                    hymn_num_file = f"pages2/{hymn['number']}.png"
+                    hymn_num_path = os.path.join(BASE_DIR, "static", hymn_num_file)
+                    
+                    if os.path.exists(hymn_num_path):
+                        page_file = hymn_num_file
+
+                img_url = url_for('static', filename=page_file)
                 image_urls.append(img_url)
             
             hymn_copy["image_urls"] = image_urls
@@ -59,7 +79,7 @@ def search():
             # Fetch audio indexing
             hymn_copy["audio"] = audio_index.get(hymn["number"], {})
 
-            # Append to your search results
+            # Append to search results layout window
             results.append(hymn_copy)
 
     return jsonify(results[:20])
