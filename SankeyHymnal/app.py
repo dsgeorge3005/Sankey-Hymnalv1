@@ -31,7 +31,7 @@ def search():
             hymn_copy = hymn.copy()
 
             # -------------------------------------------------------------
-            # 📐 BULLETPROOF PAGE-RANGE CALCULATION ENGINE
+            # 📐 PAGE-RANGE CALCULATION ENGINE
             # -------------------------------------------------------------
             try:
                 start_page = int(hymn["page"])
@@ -53,18 +53,35 @@ def search():
                 pages = [hymn.get("page", hymn["number"])]
 
             # -------------------------------------------------------------
-            # 🖼️ SMART FILE ROUTING PATH GENERATOR
+            # 🖼️ TWO-FOLDER MULTI-PATH ROUTING ENGINE
             # -------------------------------------------------------------
             image_urls = []
             for p in pages:
-                # Target path based on standard dynamic page numbers
-                page_file = f"pages2/{p}.png"
+                try:
+                    page_num_int = int(p)
+                except ValueError:
+                    page_num_int = 0
+
+                # Determine folder based on page threshold
+                # Pages 1-1000 go to 'pages/', Pages 1001+ go to 'pages2/'
+                if page_num_int <= 1000:
+                    folder_target = "pages"
+                else:
+                    folder_target = "pages2"
+
+                page_file = f"{folder_target}/{p}.png"
                 page_path = os.path.join(BASE_DIR, "static", page_file)
 
-                # DUAL PATH CHECK: If the page-numbered image file does not physically exist, 
-                # or if this is an older file named by Hymn Number (e.g., 1.png), map to Hymn Number instead!
+                # DUAL PATH FALLBACK: If page number file is missing, try Hymn Number fallback
                 if not os.path.exists(page_path):
-                    hymn_num_file = f"pages2/{hymn['number']}.png"
+                    # Check if the hymn number works in either folder
+                    try:
+                        hymn_num_int = int(hymn["number"])
+                    except ValueError:
+                        hymn_num_int = 0
+
+                    hymn_folder = "pages" if hymn_num_int <= 1000 else "pages2"
+                    hymn_num_file = f"{hymn_folder}/{hymn['number']}.png"
                     hymn_num_path = os.path.join(BASE_DIR, "static", hymn_num_file)
                     
                     if os.path.exists(hymn_num_path):
