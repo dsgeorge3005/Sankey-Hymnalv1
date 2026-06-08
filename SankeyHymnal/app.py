@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, url_for
 import json
 import os
 
@@ -41,6 +41,20 @@ def search():
 
             pages = list(range(start_page, end_page + 1))
             hymn_copy["pages"] = pages
+
+            # -------------------------------------------------------------
+            # 🖼️ GENERATE WEBLINKS FOR IMAGES INSIDE THE pages2 FOLDER
+            # -------------------------------------------------------------
+            # This loops over your calculated page numbers and generates a 
+            # safe web URL pointing to your 'static/pages2/' folder for each page.
+            image_urls = []
+            for p in pages:
+                # Generates a path like '/static/pages2/1.png'
+                img_url = url_for('static', filename=f"pages2/{p}.png")
+                image_urls.append(img_url)
+            
+            hymn_copy["image_urls"] = image_urls
+            # -------------------------------------------------------------
 
             # Fetch audio indexing
             hymn_copy["audio"] = audio_index.get(hymn["number"], {})
