@@ -610,7 +610,8 @@ const searchBox = document.getElementById("searchBox");
 const suggestionsBox = document.getElementById("suggestions");
 let currentFocus = -1;
 
-// Global image array tracker
+// Global tracking arrays (Safe Architecture Cache)
+let searchResultsCache = [];
 let activeHymnPages = [];
 let currentImageIndex = 0;
 
@@ -704,10 +705,13 @@ async function searchHymn(){
     const data = await response.json();
     let html = "";
 
+    // Store search items safely inside browser memory cache to avoid HTML string breaks
+    searchResultsCache = data;
+
     if(data.length === 0){
         html = "<div class='card'>No hymns found.</div>";
     }else{
-        data.forEach(hymn => {
+        data.forEach((hymn, index) => {
             const yt = "https://www.youtube.com/results?search_query=" + encodeURIComponent(hymn.title + " hymn");
             let audioHtml = "";
             if(hymn.audio && Object.keys(hymn.audio).length){
@@ -718,9 +722,6 @@ async function searchHymn(){
                 audioHtml += `</div></div>`;
             }
 
-            // Safe serialization step to push backend image array down to our button function
-            const encodedUrls = encodeURIComponent(JSON.stringify(hymn.image_urls));
-
             html += `
             <div class="card">
                 <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
@@ -730,7 +731,7 @@ async function searchHymn(){
                 <h2>${hymn.number} - ${hymn.title}</h2>
                 <p>Page ${hymn.page}</p>
                 <div class="actions">
-                    <button onclick="showScore('${encodedUrls}')">View Score</button>
+                    <button onclick="showScoreFromCache(${index})">View Score</button>
                     <a target="_blank" href="${yt}"><button style="width:100%;">YouTube</button></a>
                 </div>
                 ${audioHtml}
@@ -740,10 +741,15 @@ async function searchHymn(){
     document.getElementById("results").innerHTML = html;
 }
 
-function showScore(encodedUrls){ 
-    activeHymnPages = JSON.parse(decodeURIComponent(encodedUrls));
-    currentImageIndex = 0; 
-    renderPage(); 
+function showScoreFromCache(index) {
+    const selectedHymn = searchResultsCache[index];
+    if (selectedHymn && selectedHymn.image_urls) {
+        activeHymnPages = selectedHymn.image_urls;
+        currentImageIndex = 0;
+        renderPage();
+    } else {
+        alert("Error reading score array mapping layout.");
+    }
 }
 
 function renderPage(){
@@ -761,7 +767,7 @@ function renderPage(){
                 <button disabled>Sheet ${currentImageIndex + 1} / ${activeHymnPages.length}</button>
                 <button onclick="nextPage()" ${isLast ? 'disabled' : ''}>Next Page →</button>
             </div>
-            <img src="${currentImageUrl}" alt="Hymn Sheet Music View" onerror="this.onerror=null; this.src=''; alert('Image file could not be found in static/pages2/. Ensure file number and type match backend assumptions.');">
+            <img src="${currentImageUrl}" alt="Hymn Sheet Music View" onerror="this.onerror=null; this.src=''; alert('Image file could not be found in static/pages2/. Please cross check your filenames vs your page column parameters inside hymns.json.');">
         </div>`;
     document.getElementById("scoreViewer").scrollIntoView({ behavior:"smooth" });
 }
