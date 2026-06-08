@@ -299,14 +299,12 @@
 
 <body>
 
-<!-- THE SIDE MUSICAL DRAWER -->
 <div id="musicalDrawer" class="side-drawer">
     <div class="drawer-header">
         <h2>🎼 Musician Toolkit</h2>
         <button onclick="toggleDrawer()" style="padding: 6px 12px; font-size:14px;">← Go Back</button>
     </div>
 
-    <!-- 1. Keyboard Section -->
     <div class="keyboard-container">
         <div class="piano-controls">
             <button onclick="shiftOctave(-1)">◀ Octave</button>
@@ -330,7 +328,6 @@
         </div>
     </div>
 
-    <!-- 2. Rebuilt Advanced Metronome -->
     <div class="metronome-box">
         <div class="metro-display">
             <span>Metronome</span>
@@ -355,22 +352,18 @@
         </div>
 
         <div class="metro-visuals" id="metroVisualsContainer">
-            <!-- Dynamic elements loaded via JavaScript -->
-        </div>
+            </div>
         <button id="metroBtn" onclick="toggleMetronome()" style="width:100%;">▶ Start</button>
     </div>
 
-    <!-- 3. Glossary Section with Complete Live Filter Search -->
     <div>
         <h3 style="margin-top:0; margin-bottom:10px;">📚 Reference Dictionary</h3>
         <input type="text" id="glossarySearch" placeholder="Search terms (e.g., crotchet, adagio)..." oninput="filterGlossary(this.value)" style="width:100%; padding:10px; font-size:14px; border-radius:10px; margin-bottom:10px; box-sizing: border-box;">
         <div class="glossary-box" id="glossaryList">
-            <!-- Populated runtime dynamically -->
-        </div>
+            </div>
     </div>
 </div>
 
-<!-- CONTAINER LAYOUT -->
 <div class="container">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
         <button onclick="toggleDashboard()" style="padding: 10px 15px;">🗓️ Weekly Plan</button>
@@ -517,7 +510,6 @@ function updateBpm(val) {
 }
 
 function updateTimeSignature(val) {
-    // Standardize mapping configuration across odd meters
     if (val === "2_cut") { beatsPerMeasure = 2; timingFactor = 2.0; } 
     else if (val === "3_8") { beatsPerMeasure = 3; timingFactor = 0.5; }
     else if (val === "6") { beatsPerMeasure = 6; timingFactor = 0.5; }
@@ -545,7 +537,6 @@ function startMetronome() {
     document.getElementById("metroBtn").innerText = "⏹ Stop";
     document.getElementById("metroBtn").style.background = "#ff3b30";
     
-    // Formula sets base delays mapped to standard note values
     const intervalMs = ((60 / bpm) * 1000) * timingFactor;
     
     metroInterval = setInterval(() => {
@@ -560,7 +551,6 @@ function startMetronome() {
         let osc = audioCtx.createOscillator();
         let gainNode = audioCtx.createGain();
         
-        // Primary downbeat accent frequency vs alternate ticks
         osc.frequency.setValueAtTime(currentBeat === 0 ? 1150 : 680, audioCtx.currentTime); 
         gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
@@ -619,7 +609,10 @@ window.onload = function(){
 const searchBox = document.getElementById("searchBox");
 const suggestionsBox = document.getElementById("suggestions");
 let currentFocus = -1;
-let currentPage = 1;
+
+// Global image array tracker
+let activeHymnPages = [];
+let currentImageIndex = 0;
 
 document.getElementById("weeklyNotes").addEventListener("input", function() {
     localStorage.setItem("weeklyHymnsNotes", this.value);
@@ -725,6 +718,9 @@ async function searchHymn(){
                 audioHtml += `</div></div>`;
             }
 
+            // Safe serialization step to push backend image array down to our button function
+            const encodedUrls = encodeURIComponent(JSON.stringify(hymn.image_urls));
+
             html += `
             <div class="card">
                 <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
@@ -734,7 +730,7 @@ async function searchHymn(){
                 <h2>${hymn.number} - ${hymn.title}</h2>
                 <p>Page ${hymn.page}</p>
                 <div class="actions">
-                    <button onclick="showScore(${hymn.page})">View Score</button>
+                    <button onclick="showScore('${encodedUrls}')">View Score</button>
                     <a target="_blank" href="${yt}"><button style="width:100%;">YouTube</button></a>
                 </div>
                 ${audioHtml}
@@ -744,23 +740,45 @@ async function searchHymn(){
     document.getElementById("results").innerHTML = html;
 }
 
-function showScore(page){ currentPage = page; renderPage(); }
+function showScore(encodedUrls){ 
+    activeHymnPages = JSON.parse(decodeURIComponent(encodedUrls));
+    currentImageIndex = 0; 
+    renderPage(); 
+}
 
 function renderPage(){
+    if(!activeHymnPages || activeHymnPages.length === 0) return;
+    
+    const currentImageUrl = activeHymnPages[currentImageIndex];
+    
+    const isFirst = currentImageIndex === 0;
+    const isLast = currentImageIndex === activeHymnPages.length - 1;
+
     document.getElementById("scoreViewer").innerHTML = `
         <div class="card">
             <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
-                <button onclick="previousPage()">← Previous</button>
-                <button disabled>Page ${currentPage}</button>
-                <button onclick="nextPage()">Next →</button>
+                <button onclick="previousPage()" ${isFirst ? 'disabled' : ''}>← Previous Page</button>
+                <button disabled>Sheet ${currentImageIndex + 1} / ${activeHymnPages.length}</button>
+                <button onclick="nextPage()" ${isLast ? 'disabled' : ''}>Next Page →</button>
             </div>
-            <img src="/static/pages/Sankey_${currentPage}.jpg" alt="Page ${currentPage}">
+            <img src="${currentImageUrl}" alt="Hymn Sheet Music View" onerror="this.onerror=null; this.src=''; alert('Image file could not be found in static/pages2/. Ensure file number and type match backend assumptions.');">
         </div>`;
     document.getElementById("scoreViewer").scrollIntoView({ behavior:"smooth" });
 }
 
-function nextPage(){ currentPage++; renderPage(); }
-function previousPage(){ if(currentPage > 1){ currentPage--; renderPage(); } }
+function nextPage(){ 
+    if(currentImageIndex < activeHymnPages.length - 1){ 
+        currentImageIndex++; 
+        renderPage(); 
+    } 
+}
+
+function previousPage(){ 
+    if(currentImageIndex > 0){ 
+        currentImageIndex--; 
+        renderPage(); 
+    } 
+}
 </script>
 </body>
 </html>
