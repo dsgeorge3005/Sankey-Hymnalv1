@@ -151,7 +151,7 @@
     .term-def { font-size: 14px; color: #666; margin-top: 2px; }
 
     #suggestions{ background:white; border-radius:16px; margin-top:10px; overflow:hidden; box-shadow:0 5px 20px rgba(0,0,0,.08); max-height: 250px; overflow-y: auto; }
-    .suggestion{ padding:14px 18px; cursor:pointer; border-bottom:1px solid #eee; transition: background 0.15s ease; }
+    .suggestion{ padding:14px 18px; cursor:pointer; border-bottom:1px solid #eee; transition: background 0.15s ease; color: black; }
     .suggestion:hover{ background:#f5f5f7; }
     .suggestion.selected { background: #e8e8ed; }
 
@@ -168,6 +168,7 @@
     .voice-part{ font-weight:600; font-size:16px; margin-bottom:10px; }
     .audio-card audio{ width:100%; }
 
+    /* --- ENHANCED DARK MODE STYLES --- */
     .dark-mode{ background:#111; color:white; }
     .dark-mode .card, .dark-mode .dash-box, .dark-mode .side-drawer { background:#1c1c1e; color:white; }
     .dark-mode input, .dark-mode textarea, .dark-mode select { background:#2c2c2e; color:white; }
@@ -176,6 +177,12 @@
     .dark-mode .term-name { color: #fff; }
     .dark-mode .term-def { color: #aaa; }
     .dark-mode .audio-card, .dark-mode .metronome-box { background:#2c2c2e; }
+    
+    /* Dropdown Inversions for Dark Mode */
+    .dark-mode #suggestions { background: #1c1c1e; box-shadow: 0 5px 20px rgba(0,0,0,.4); }
+    .dark-mode .suggestion { color: white; border-bottom-color: #2c2c2e; }
+    .dark-mode .suggestion:hover { background: #2c2c2e; }
+    .dark-mode .suggestion.selected { background: #3a3a3c; }
     </style>
 </head>
 
@@ -429,7 +436,7 @@ window.onload = function(){
     updateTimeSignature("4"); populateGlossary(glossaryTerms);
 };
 
-/* --- GOOGLE DESIGN PATTERN LOOKUP ENGINE --- */
+/* --- GOOGLE STYLE SEARCH ENGINE --- */
 const searchBox = document.getElementById("searchBox");
 const suggestionsBox = document.getElementById("suggestions");
 let currentFocus = -1;
@@ -471,7 +478,6 @@ async function showSuggestions(){
         let html = "";
         data.slice(0,10).forEach(hymn => {
             const safeTitle = hymn.title.replace(/'/g, "\\'");
-            // Suggestion mode ONLY: Changes text box content upon selection execution
             html += `<div class="suggestion" onclick="selectSuggestion('${hymn.number}', '${safeTitle}')"><strong>${hymn.number}</strong> — ${hymn.title}</div>`;
         });
         suggestionsBox.innerHTML = html;
@@ -481,7 +487,6 @@ async function showSuggestions(){
 function selectSuggestion(number, title) {
     searchBox.value = `${number} - ${title}`;
     suggestionsBox.innerHTML = "";
-    // Locks layout compilation directly to this single number item reference
     searchHymn(number);
 }
 
@@ -553,14 +558,13 @@ async function searchHymn(exactNumber = null){
     document.getElementById("scoreViewer").innerHTML = ""; 
 }
 
-/* --- STORAGE IMAGE COMPILATION FALLBACK ROUTE --- */
+/* --- AUTO FALLBACK SCORE LOADER --- */
 function showScoreFromCache(index) {
     const selectedHymn = searchResultsCache[index];
     if (!selectedHymn) return;
     
     activeHymnPages = selectedHymn.image_urls || selectedHymn.images || selectedHymn.pages;
     
-    // Automatically builds the specific target route using your folder parameters
     if (!activeHymnPages) {
         const fallbackPath = `/static/pages/Sankey_${selectedHymn.number}.jpg`;
         activeHymnPages = [fallbackPath];
