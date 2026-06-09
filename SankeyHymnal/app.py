@@ -1,14 +1,39 @@
 import time
 from datetime import datetime, timedelta
-# 1. FIXED: Changed 'render_code' to 'render_template'
 from flask import Flask, render_template, request, jsonify
 
-# 2. FIXED: Ensure 'app' is declared FIRST before any routes use it!
 app = Flask(__name__)
 
 # Global in-memory storage for setlists
-# WARNING: This resets whenever Render restarts. Consider a database later!
 setlists_db = {}
+
+# Mock Database Dataset matching frontend payload expectations
+HYMNS_DATABASE = [
+    {
+        "number": "1",
+        "title": "Ho, Every One That Thirsteth",
+        "page": "5",
+        "prev_hymn": None,
+        "next_hymn": "2",
+        "audio": {"Soprano": "hymn1_sop.mp3", "Alto": "hymn1_alt.mp3"}
+    },
+    {
+        "number": "2",
+        "title": "Grace Greater than Our Sin",
+        "page": "6",
+        "prev_hymn": "1",
+        "next_hymn": "3",
+        "audio": {"Full Mix": "hymn2_full.mp3"}
+    },
+    {
+        "number": "23",
+        "title": "The Lord's My Shepherd",
+        "page": "25",
+        "prev_hymn": "22",
+        "next_hymn": "24",
+        "audio": {"Tenor": "hymn23_ten.mp3", "Bass": "hymn23_bas.mp3"}
+    }
+]
 
 def cleanup_old_setlists():
     """Removes setlists that are older than 4 weeks (28 days)"""
@@ -16,51 +41,40 @@ def cleanup_old_setlists():
     four_weeks_ago = now - timedelta(days=28)
     
     to_delete = []
-    for date_str in list(setlists_db.keys()):
+    for key_str in list(setlists_db.keys()):
         try:
-            setlist_date = datetime.strptime(date_str, "%Y-%m-%d")
+            # Handle standard composite formats gracefully
+            date_part = key_str.split("::")[0]
+            setlist_date = datetime.strptime(date_part, "%Y-%m-%d")
             if setlist_date < four_weeks_ago:
-                to_delete.append(date_str)
-        except ValueError:
-            to_delete.append(date_str)
+                to_delete.append(key_str)
+        except Exception:
+            to_delete.append(key_str)
             
     for old_key in to_delete:
-        del setlists_db[old_key]
-
-# --- CORE ROUTING FIXES FOR RENDER ---
+        if old_key in setlists_db:
+            del setlists_db[old_key]
 
 @app.route('/', methods=['GET'])
 def home():
-    """
-    FIXED: Root route to satisfy Render's health check.
-    Make sure your 'index.html' file is inside a folder named 'templates'.
-    """
     try:
         return render_template('index.html')
     except Exception:
-        # Fallback string if index.html isn't in the templates folder yet
-        return "Sankey Hymnal API is running!", 200
+        return "Sankey Hymnal API is running! (Make sure index.html is inside the 'templates' folder)", 200
 
 @app.route('/api/dashboard', methods=['GET'])
 def dashboard():
-    """
-    FIXED: Resolves the constant 404 errors seen in the logs.
-    """
     return jsonify({
         "status": "healthy",
         "message": "Welcome to the Sankey Hymnal Dashboard",
         "timestamp": datetime.utcnow().isoformat()
     }), 200
 
-# --- API SETLIST ENDPOINTS ---
-
-# 3. FIXED: Changed 'codecs=' to 'methods='
 @app.route('/api/setlists', methods=['GET'])
 def get_setlists():
     cleanup_old_setlists() 
     return jsonify(setlists_db)
 
-# 4. FIXED: Changed 'codecs=' to 'methods='
 @app.route('/api/setlists', methods=['POST'])
 def save_setlist():
     data = request.get_json() or {}
@@ -71,20 +85,23 @@ def save_setlist():
         return jsonify({"error": "Missing date key"}), 400
         
     setlists_db[date_key] = [str(num).strip() for num in hymns_list if str(num).strip()]
-    
     cleanup_old_setlists() 
     return jsonify({"success": True, "data": setlists_db})
 
-# --- PLACEHOLDERS FOR YOUR OTHER ROUTES ---
-# Paste your existing search and audio routing code right below here!
-
 @app.route('/search', methods=['GET'])
 def search():
-    query = request.args.get('q', '')
-    # Your search logic goes here
-    return jsonify({"results": [], "query": query})
+    query = request.args.get('q', '').strip().lower()
+    if not query:
+        return jsonify([])
 
+    matched_results = []
+    for hymn in HYMNS_DATABASE:
+        # Match against number or against title text strings safely
+        if query == str(hymn["number"]).lower() or query in hymn["title"].lower():
+            matched_results.append(hymn)
+
+    # Return raw array directly to match frontend parsing architecture expectations
+    return jsonify(matched_results)
 
 if __name__ == '__main__':
-    # Local development settings
     app.run(debug=True, port=10000)
