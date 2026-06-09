@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, jsonify
 app = Flask(__name__)
 
 # Global in-memory storage for setlists
+# WARNING: This resets whenever Render restarts. Consider a database later!
 setlists_db = {}
 
 def cleanup_old_setlists():
@@ -25,6 +26,33 @@ def cleanup_old_setlists():
             
     for old_key in to_delete:
         del setlists_db[old_key]
+
+# --- CORE ROUTING FIXES FOR RENDER ---
+
+@app.route('/', methods=['GET'])
+def home():
+    """
+    FIXED: Root route to satisfy Render's health check.
+    Make sure your 'index.html' file is inside a folder named 'templates'.
+    """
+    try:
+        return render_template('index.html')
+    except Exception:
+        # Fallback string if index.html isn't in the templates folder yet
+        return "Sankey Hymnal API is running!", 200
+
+@app.route('/api/dashboard', methods=['GET'])
+def dashboard():
+    """
+    FIXED: Resolves the constant 404 errors seen in the logs.
+    """
+    return jsonify({
+        "status": "healthy",
+        "message": "Welcome to the Sankey Hymnal Dashboard",
+        "timestamp": datetime.utcnow().isoformat()
+    }), 200
+
+# --- API SETLIST ENDPOINTS ---
 
 # 3. FIXED: Changed 'codecs=' to 'methods='
 @app.route('/api/setlists', methods=['GET'])
@@ -47,4 +75,16 @@ def save_setlist():
     cleanup_old_setlists() 
     return jsonify({"success": True, "data": setlists_db})
 
-# ... (Keep all your existing search, home, and audio routing code below this) ...
+# --- PLACEHOLDERS FOR YOUR OTHER ROUTES ---
+# Paste your existing search and audio routing code right below here!
+
+@app.route('/search', methods=['GET'])
+def search():
+    query = request.args.get('q', '')
+    # Your search logic goes here
+    return jsonify({"results": [], "query": query})
+
+
+if __name__ == '__main__':
+    # Local development settings
+    app.run(debug=True, port=10000)
