@@ -462,7 +462,7 @@ const glossaryTerms = [
     { name: "Coda", def: "An expanded closing section or custom musical outro layout." }
 ];
 
-// Audio Pitch Synth Engine
+// Audio Setup
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let activeOctave = 4;
 const baseFrequencies = {
@@ -470,18 +470,54 @@ const baseFrequencies = {
     'F': 21.83, 'F#': 23.12, 'G': 24.50, 'G#': 25.96, 'A': 27.50, 'A#': 29.14, 'B': 30.87, 'C2': 32.70
 };
 
+// 🎹 Acoustic Piano FM Synth Engine
 function playTone(note) {
-    let freq = baseFrequencies[note] * Math.pow(2, activeOctave);
-    let osc = audioCtx.createOscillator();
-    let gainNode = audioCtx.createGain();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 1.2);
-    osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 1.2);
+    let fundamental = baseFrequencies[note] * Math.pow(2, activeOctave);
+    let now = audioCtx.currentTime;
+    
+    // Master Gain for volume envelope
+    let masterGain = audioCtx.createGain();
+    masterGain.connect(audioCtx.destination);
+
+    // Dynamic Volume Envelope (ADSR tailored for an Acoustic Grand String Strike)
+    masterGain.gain.setValueAtTime(0, now);
+    masterGain.gain.linearRampToValueAtTime(0.45, now + 0.006); // Quick, aggressive strike attack
+    masterGain.gain.exponentialRampToValueAtTime(0.12, now + 0.28); // Drop down to sustaining timbre resonance
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8); // Long natural decay trailing out
+
+    // Array configuration of overtones/harmonics to capture realistic wood-and-string timber
+    // format: [frequency multiplier, relative volume intensity, wave profile type]
+    const overtones = [
+        [1.0,  0.50, 'sine'],     // Fundamental core baseline tone
+        [2.0,  0.25, 'sine'],     // 1st Overtone (Octave up) - clarity
+        [3.0,  0.12, 'triangle'], // 2nd Overtone (Fifth) - warmth and string grit
+        [4.0,  0.06, 'sine'],     // 3rd Overtone (Double octave) - bell resonance
+        [5.0,  0.03, 'sine']      // 4th Overtone (Major third ring)
+    ];
+
+    overtones.forEach(([multiplier, volumeFactor, waveType]) => {
+        let osc = audioCtx.createOscillator();
+        let toneGain = audioCtx.createGain();
+
+        osc.type = waveType;
+        osc.frequency.setValueAtTime(fundamental * multiplier, now);
+
+        // Slightly detune higher harmonics slightly to mimic natural physical string tension variance
+        if (multiplier > 1.0) {
+            osc.detune.setValueAtTime((multiplier - 1) * 2.5, now);
+        }
+
+        toneGain.gain.setValueAtTime(volumeFactor, now);
+        
+        // Make higher-pitched frequencies decay faster (just like real short acoustic strings)
+        toneGain.gain.exponentialRampToValueAtTime(0.001, now + (1.8 / multiplier));
+
+        osc.connect(toneGain);
+        toneGain.connect(masterGain);
+
+        osc.start(now);
+        osc.stop(now + 1.8);
+    });
 }
 
 function shiftOctave(direction) {
