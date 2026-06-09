@@ -291,7 +291,7 @@ const glossaryTerms = [
     { name: "Fermata", def: "Hold or sustain the note indefinitely until cut off by the leader." }
 ];
 
-// Audio Configuration
+// Audio Setup
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let activeOctave = 4;
 const baseFrequencies = {
@@ -336,7 +336,7 @@ function toggleDrawer() {
     document.body.classList.toggle("drawer-open", drawer.classList.contains("open"));
 }
 
-// Metronome
+// Metronome Engine
 let metroInterval = null;
 let isMetroRunning = false;
 let bpm = 100;
@@ -394,7 +394,7 @@ function populateGlossary(list) {
 }
 function filterGlossary(q) { populateGlossary(glossaryTerms.filter(t => t.name.toLowerCase().includes(q.toLowerCase()))); }
 
-/* --- SYNC PANEL --- */
+/* --- ACTIVE SYNC SYSTEM --- */
 let syncDebounceTimer;
 let isUserTyping = false;
 
@@ -429,7 +429,7 @@ window.onload = function(){
     updateTimeSignature("4"); populateGlossary(glossaryTerms);
 };
 
-/* --- GOOGLE STYLE SEARCH ENGINE --- */
+/* --- GOOGLE DESIGN PATTERN LOOKUP ENGINE --- */
 const searchBox = document.getElementById("searchBox");
 const suggestionsBox = document.getElementById("suggestions");
 let currentFocus = -1;
@@ -461,14 +461,17 @@ document.addEventListener("click", (e) => { if (e.target !== searchBox) suggesti
 async function showSuggestions(){
     const query = searchBox.value.trim();
     currentFocus = -1;
-    if(query.length < 1){ suggestionsBox.innerHTML = ""; return; }
+    if(query.length < 1){ 
+        suggestionsBox.innerHTML = ""; 
+        return; 
+    }
     try {
         const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
         const data = await response.json();
         let html = "";
         data.slice(0,10).forEach(hymn => {
             const safeTitle = hymn.title.replace(/'/g, "\\'");
-            // Google Behavior: Populates the input bar cleanly on click and runs the query
+            // Suggestion mode ONLY: Changes text box content upon selection execution
             html += `<div class="suggestion" onclick="selectSuggestion('${hymn.number}', '${safeTitle}')"><strong>${hymn.number}</strong> — ${hymn.title}</div>`;
         });
         suggestionsBox.innerHTML = html;
@@ -478,7 +481,8 @@ async function showSuggestions(){
 function selectSuggestion(number, title) {
     searchBox.value = `${number} - ${title}`;
     suggestionsBox.innerHTML = "";
-    searchHymn();
+    // Locks layout compilation directly to this single number item reference
+    searchHymn(number);
 }
 
 function addActive(items) {
@@ -490,24 +494,35 @@ function addActive(items) {
 }
 function removeActive(items) { for (let i = 0; i < items.length; i++) items[i].classList.remove("selected"); }
 
-function quickLoad(number) { searchBox.value = number; searchHymn(); }
+function quickLoad(number) { searchBox.value = number; searchHymn(number); }
 
-async function searchHymn(){
+async function searchHymn(exactNumber = null){
     let query = searchBox.value.trim();
     if(!query) return;
     
-    if(query.includes(" — ")) query = query.split(" — ")[0];
-    if(query.includes(" - ")) query = query.split(" - ")[0];
+    if(exactNumber) {
+        query = exactNumber;
+    } else {
+        if(query.includes(" — ")) query = query.split(" — ")[0];
+        if(query.includes(" - ")) query = query.split(" - ")[0];
+    }
 
     const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
     const data = await response.json();
-    searchResultsCache = data;
     let html = "";
 
     if(data.length === 0){
         html = "<div class='card'>No hymns found.</div>";
+        searchResultsCache = [];
     }else{
-        data.forEach((hymn, index) => {
+        let finalData = data;
+        if(exactNumber) {
+            finalData = data.filter(hymn => String(hymn.number).trim() === String(exactNumber).trim());
+        }
+        
+        searchResultsCache = finalData;
+
+        finalData.forEach((hymn, index) => {
             const yt = "https://www.youtube.com/results?search_query=" + encodeURIComponent(hymn.title + " hymn");
             let audioHtml = "";
             if(hymn.audio && Object.keys(hymn.audio).length){
@@ -538,14 +553,14 @@ async function searchHymn(){
     document.getElementById("scoreViewer").innerHTML = ""; 
 }
 
-/* --- DYNAMIC FALLBACK ROUTER ENGINE --- */
+/* --- STORAGE IMAGE COMPILATION FALLBACK ROUTE --- */
 function showScoreFromCache(index) {
     const selectedHymn = searchResultsCache[index];
     if (!selectedHymn) return;
     
     activeHymnPages = selectedHymn.image_urls || selectedHymn.images || selectedHymn.pages;
     
-    // Fallback: Maps structure directly to your local file path architecture
+    // Automatically builds the specific target route using your folder parameters
     if (!activeHymnPages) {
         const fallbackPath = `/static/pages/Sankey_${selectedHymn.number}.jpg`;
         activeHymnPages = [fallbackPath];
@@ -559,7 +574,7 @@ function showScoreFromCache(index) {
         currentImageIndex = 0;
         renderPage();
     } else {
-        alert("Could not load score structural path values.");
+        alert("Could not process score asset path layouts.");
     }
 }
 
