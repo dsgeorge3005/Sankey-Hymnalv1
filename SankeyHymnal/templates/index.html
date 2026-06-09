@@ -257,11 +257,11 @@
         <div class="dashboard-grid">
             <div class="dash-box">
                 <h3>📖 This Week's Hymns</h3>
-                <textarea id="weeklyNotes" placeholder="Type chosen songs here..." oninput="syncNotesToServer()"></textarea>
+                <textarea id="weeklyNotes" placeholder="Type chosen songs here..." oninput="syncDashboardData()"></textarea>
             </div>
             <div class="dash-box">
                 <h3>📅 Service Date Selector</h3>
-                <input type="date" id="calendarPicker" onchange="syncDateToServer()">
+                <input type="date" id="calendarPicker" onchange="syncDashboardData()">
             </div>
         </div>
     </div>
@@ -490,44 +490,50 @@ function filterGlossary(query) {
     populateGlossary(filtered);
 }
 
-/* --- SERVER CROSS-DEVICE SYNC ENGINE --- */
-let debounceTimer;
+/* --- RE-ENGINEERED DEVICE-TO-DEVICE SYNC FRAMEWORK --- */
+let syncDebounceTimer;
+let isUserTyping = false;
 
-async function loadDashboardFromServer() {
+async function fetchServerDashboardUpdate() {
+    // Stop server refreshes from breaking input states while actively typing
+    if (isUserTyping) return;
+    
     try {
         const response = await fetch('/api/dashboard');
         const data = await response.json();
-        document.getElementById("weeklyNotes").value = data.notes || "";
-        document.getElementById("calendarPicker").value = data.date || "";
+        
+        // Only update text values if they don't match to avoid caret hopping bugs
+        if(document.getElementById("weeklyNotes").value !== (data.notes || "")) {
+            document.getElementById("weeklyNotes").value = data.notes || "";
+        }
+        if(document.getElementById("calendarPicker").value !== (data.date || "")) {
+            document.getElementById("calendarPicker").value = data.date || "";
+        }
     } catch (err) {
-        console.error("Could not fetch server dashboard info:", err);
+        console.error("Auto sync update pull failed:", err);
     }
 }
 
-function syncNotesToServer() {
-    // Debounce saves to avoid spamming network requests with every individual keystroke
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(async () => {
+function syncDashboardData() {
+    isUserTyping = true;
+    clearTimeout(syncDebounceTimer);
+    
+    syncDebounceTimer = setTimeout(async () => {
         const notesVal = document.getElementById("weeklyNotes").value;
+        const dateVal = document.getElementById("calendarPicker").value;
+        
         try {
             await fetch('/api/dashboard', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: json.stringify({ notes: notesVal })
+                body: JSON.stringify({ notes: notesVal, date: dateVal })
             });
-        } catch(err) { console.error("Notes sync failed:", err); }
-    }, 400); // Wait until user stops typing for 400ms
-}
-
-async function syncDateToServer() {
-    const dateVal = document.getElementById("calendarPicker").value;
-    try {
-        await fetch('/api/dashboard', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: json.stringify({ date: dateVal })
-        });
-    } catch(err) { console.error("Calendar sync failed:", err); }
+        } catch(err) { 
+            console.error("Cloud data save payload dropped:", err); 
+        } finally {
+            isUserTyping = false;
+        }
+    }, 500); // Send payload when typing stops for 500ms
 }
 
 // Core App Initialization Framework
@@ -536,12 +542,15 @@ window.onload = function(){
         document.body.classList.add("dark-mode");
     }
     
-    // Load fresh data directly from the main cloud server instead of browser cache memory
-    loadDashboardFromServer();
+    // First data call
+    fetchServerDashboardUpdate();
     
     if(localStorage.getItem("dashboardOpen") === "true") {
         document.getElementById("weeklyDashboard").classList.add("open");
     }
+    
+    // Setup background interval engine to fetch remote updates every 4 seconds
+    setInterval(fetchServerDashboardUpdate, 4000);
     
     updateTimeSignature("4");
     populateGlossary(glossaryTerms);
@@ -558,8 +567,7 @@ function toggleDashboard() {
     const dash = document.getElementById("weeklyDashboard");
     dash.classList.toggle("open");
     localStorage.setItem("dashboardOpen", dash.classList.contains("open"));
-    // Refresh content whenever dashboard layout unfolds
-    if(dash.classList.contains("open")) { loadDashboardFromServer(); }
+    if(dash.classList.contains("open")) { fetchServerDashboardUpdate(); }
 }
 
 function toggleTheme(){
