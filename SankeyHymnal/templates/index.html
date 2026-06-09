@@ -48,11 +48,6 @@
         min-width: 0;
     }
 
-    textarea {
-        resize: vertical;
-        min-height: 100px;
-    }
-
     button{
         background:black;
         color:white;
@@ -168,7 +163,13 @@
     .voice-part{ font-weight:600; font-size:16px; margin-bottom:10px; }
     .audio-card audio{ width:100%; }
 
-    /* --- DARK MODE RULES --- */
+    /* Setlist Builder UI Components */
+    .setlist-pill-box { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+    .setlist-pill { background: #e8e8ed; padding: 8px 14px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; color: black; }
+    .setlist-pill:hover { background: #d1d1d6; }
+    .setlist-pill .remove-btn { color: #ff3b30; font-weight: bold; cursor: pointer; margin-left: 4px; }
+
+    /* Dark Mode styles */
     .dark-mode{ background:#111; color:white; }
     .dark-mode .card, .dark-mode .dash-box, .dark-mode .side-drawer { background:#1c1c1e; color:white; }
     .dark-mode input, .dark-mode textarea, .dark-mode select { background:#2c2c2e; color:white; }
@@ -182,6 +183,8 @@
     .dark-mode .suggestion { color: white; border-bottom-color: #2c2c2e; }
     .dark-mode .suggestion:hover { background: #2c2c2e; }
     .dark-mode .suggestion.selected { background: #3a3a3c; }
+    .dark-mode .setlist-pill { background: #2c2c2e; color: white; }
+    .dark-mode .setlist-pill:hover { background: #3a3a3c; }
     </style>
 </head>
 
@@ -252,7 +255,7 @@
 
 <div class="container">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <button onclick="toggleDashboard()" style="padding: 10px 15px;">🗓️ Weekly Plan</button>
+        <button onclick="toggleDashboard()" style="padding: 10px 15px;">📂 Setlist Manager</button>
         <div style="display:flex; gap:10px;">
             <button onclick="toggleDrawer()" style="background:#007aff; color:white;">🎵 Music Tools</button>
             <button onclick="toggleTheme()">🌓 Theme</button>
@@ -261,13 +264,22 @@
 
     <div id="weeklyDashboard" class="dashboard-content">
         <div class="dashboard-grid">
-            <div class="dash-box">
-                <h3>📖 This Week's Hymns</h3>
-                <textarea id="weeklyNotes" placeholder="Type chosen songs here..." oninput="syncDashboardData()"></textarea>
-            </div>
-            <div class="dash-box">
-                <h3>📅 Service Date Selector</h3>
-                <input type="date" id="calendarPicker" onchange="syncDashboardData()">
+            <div class="dash-box" style="grid-column: 1 / -1;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <h3>📋 Service Setlist Builder</h3>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <span style="font-size:14px; font-weight:600;">Target Service Date:</span>
+                        <select id="setlistDateDropdown" onchange="loadSelectedDateSetlist()" style="padding:8px; border-radius:10px; font-size:14px; min-width:140px;"></select>
+                    </div>
+                </div>
+                
+                <div style="display:flex; gap:10px; margin-top:5px;">
+                    <input type="number" id="quickAddHymnNum" placeholder="Type Hymn # to stack..." style="padding:10px; border-radius:10px;">
+                    <button onclick="addHymnToActiveSetlist()">+ Add to List</button>
+                </div>
+
+                <div class="setlist-pill-box" id="activeSetlistContainer"></div>
+                <p style="font-size:12px; color:#8e8e93; margin: 5px 0 0 0;">💡 Pro-Tip: Tap any stacked song number pill above to auto-load its sheet music scores instantly!</p>
             </div>
         </div>
     </div>
@@ -400,38 +412,110 @@ function populateGlossary(list) {
 }
 function filterGlossary(q) { populateGlossary(glossaryTerms.filter(t => t.name.toLowerCase().includes(q.toLowerCase()))); }
 
-/* --- ACTIVE SYNC SYSTEM --- */
-let syncDebounceTimer;
-let isUserTyping = false;
+/* --- ACTIVE PERSISTENT SETLIST LOGIC --- */
+let serverSetlistsGlobal = {};
 
-async function fetchServerDashboardUpdate() {
-    if (isUserTyping) return;
-    try {
-        const response = await fetch('/api/dashboard');
-        const data = await response.json();
-        if(document.getElementById("weeklyNotes").value !== (data.notes || "")) document.getElementById("weeklyNotes").value = data.notes || "";
-        if(document.getElementById("calendarPicker").value !== (data.date || "")) document.getElementById("calendarPicker").value = data.date || "";
-    } catch (err) { console.error(err); }
+function generateDateOptions() {
+    const dropdown = document.getElementById("setlistDateDropdown");
+    dropdown.innerHTML = "";
+    
+    // Generate dates: 2 weeks ago up to 4 weeks out into future mapping
+    const today = new datetime || new Date();
+    for (let i = -14; i <= 28; i++) {
+        const d = new Date();
+        d.setDate(today.getDate() + i);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const dateString = `${yyyy}-${mm}-${dd}`;
+        
+        const option = document.createElement("option");
+        option.value = dateString;
+        
+        // Pretty text formatting layout
+        const optionsFormat = { weekday: 'short', month: 'short', day: 'numeric' };
+        let label = d.toLocaleDateString(undefined, optionsFormat);
+        if (i === 0) label += " (Today)";
+        option.text = label;
+        
+        dropdown.appendChild(option);
+    }
+    dropdown.value = today.toISOString().split('T')[0];
 }
 
-function syncDashboardData() {
-    isUserTyping = true; clearTimeout(syncDebounceTimer);
-    syncDebounceTimer = setTimeout(async () => {
-        try {
-            await fetch('/api/dashboard', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ notes: document.getElementById("weeklyNotes").value, date: document.getElementById("calendarPicker").value })
-            });
-        } catch(err) { console.error(err); } finally { isUserTyping = false; }
-    }, 500);
+async function fetchAllSetlists() {
+    try {
+        const response = await fetch('/api/setlists');
+        serverSetlistsGlobal = await response.json();
+        renderActiveSetlistPills();
+    } catch (err) { console.error("Error retrieving setlists:", err); }
+}
+
+function renderActiveSetlistPills() {
+    const selectedDate = document.getElementById("setlistDateDropdown").value;
+    const hymns = serverSetlistsGlobal[selectedDate] || [];
+    const container = document.getElementById("activeSetlistContainer");
+    
+    if (hymns.length === 0) {
+        container.innerHTML = "<div style='color:#8e8e93; padding:10px 0;'>No hymns added to this service date yet.</div>";
+        return;
+    }
+    
+    let html = "";
+    hymns.forEach((num) => {
+        html += `
+        <div class="setlist-pill" onclick="quickLoad('${num}')">
+            🎵 Hymn ${num}
+            <span class="remove-btn" onclick="event.stopPropagation(); removeHymnFromSetlist('${num}')">×</span>
+        </div>`;
+    });
+    container.innerHTML = html;
+}
+
+function loadSelectedDateSetlist() {
+    renderActiveSetlistPills();
+}
+
+async_update_setlist = async (dateKey, hymnsArray) => {
+    try {
+        const response = await fetch('/api/setlists', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date: dateKey, hymns: hymnsArray })
+        });
+        const resData = await response.json();
+        serverSetlistsGlobal = resData.data;
+        renderActiveSetlistPills();
+    } catch(err) { console.error("Error saving setlist instance:", err); }
+};
+
+function addHymnToActiveSetlist() {
+    const input = document.getElementById("quickAddHymnNum");
+    const num = input.value.trim();
+    if (!num) return;
+    
+    const selectedDate = document.getElementById("setlistDateDropdown").value;
+    const currentHymns = serverSetlistsGlobal[selectedDate] || [];
+    
+    if (!currentHymns.includes(num)) {
+        currentHymns.push(num);
+        async_update_setlist(selectedDate, currentHymns);
+    }
+    input.value = "";
+}
+
+function removeHymnFromSetlist(num) {
+    const selectedDate = document.getElementById("setlistDateDropdown").value;
+    let currentHymns = serverSetlistsGlobal[selectedDate] || [];
+    currentHymns = currentHymns.filter(item => item !== num);
+    async_update_setlist(selectedDate, currentHymns);
 }
 
 window.onload = function(){
     if(localStorage.getItem("theme") === "dark") document.body.classList.add("dark-mode");
-    fetchServerDashboardUpdate();
+    generateDateOptions();
+    fetchAllSetlists();
     if(localStorage.getItem("dashboardOpen") === "true") document.getElementById("weeklyDashboard").classList.add("open");
-    setInterval(fetchServerDashboardUpdate, 4000);
     updateTimeSignature("4"); populateGlossary(glossaryTerms);
 };
 
@@ -446,7 +530,6 @@ let currentImageIndex = 0;
 function toggleDashboard() {
     const d = document.getElementById("weeklyDashboard");
     d.classList.toggle("open"); localStorage.setItem("dashboardOpen", d.classList.contains("open"));
-    if(d.classList.contains("open")) fetchServerDashboardUpdate();
 }
 function toggleTheme(){ document.body.classList.toggle("dark-mode"); localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light"); }
 
@@ -555,6 +638,11 @@ async function searchHymn(exactNumber = null){
     }
     document.getElementById("results").innerHTML = html;
     document.getElementById("scoreViewer").innerHTML = ""; 
+    
+    // Automatically open score layout upon quickLoad selection triggers
+    if(exactNumber && searchResultsCache.length > 0) {
+        showScoreFromCache(0);
+    }
 }
 
 /* --- ADVANCED MULTI-PAGE ALIGNMENT LOADER --- */
@@ -581,10 +669,7 @@ function showScoreFromCache(index) {
         } else {
             const singlePage = parseInt(pageStr, 10);
             if (!isNaN(singlePage)) {
-                // Load the current page specified in JSON
                 pagesArray.push(`/static/pages/Sankey_${singlePage}.jpg`);
-                // ALWAYS pre-load the next page into the sequence list!
-                // This resolves the shared layout issue if a song overflows past its marker.
                 pagesArray.push(`/static/pages/Sankey_${singlePage + 1}.jpg`);
             }
         }
