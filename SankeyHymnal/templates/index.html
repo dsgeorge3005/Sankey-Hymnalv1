@@ -168,7 +168,7 @@
     .voice-part{ font-weight:600; font-size:16px; margin-bottom:10px; }
     .audio-card audio{ width:100%; }
 
-    /* --- ENHANCED DARK MODE STYLES --- */
+    /* --- DARK MODE RULES --- */
     .dark-mode{ background:#111; color:white; }
     .dark-mode .card, .dark-mode .dash-box, .dark-mode .side-drawer { background:#1c1c1e; color:white; }
     .dark-mode input, .dark-mode textarea, .dark-mode select { background:#2c2c2e; color:white; }
@@ -178,7 +178,6 @@
     .dark-mode .term-def { color: #aaa; }
     .dark-mode .audio-card, .dark-mode .metronome-box { background:#2c2c2e; }
     
-    /* Dropdown Inversions for Dark Mode */
     .dark-mode #suggestions { background: #1c1c1e; box-shadow: 0 5px 20px rgba(0,0,0,.4); }
     .dark-mode .suggestion { color: white; border-bottom-color: #2c2c2e; }
     .dark-mode .suggestion:hover { background: #2c2c2e; }
@@ -558,16 +557,45 @@ async function searchHymn(exactNumber = null){
     document.getElementById("scoreViewer").innerHTML = ""; 
 }
 
-/* --- AUTO FALLBACK SCORE LOADER --- */
+/* --- ADVANCED MULTI-PAGE ALIGNMENT LOADER --- */
 function showScoreFromCache(index) {
     const selectedHymn = searchResultsCache[index];
     if (!selectedHymn) return;
     
     activeHymnPages = selectedHymn.image_urls || selectedHymn.images || selectedHymn.pages;
     
+    if (!activeHymnPages && selectedHymn.page) {
+        const pageStr = String(selectedHymn.page).trim();
+        const pagesArray = [];
+
+        if (pageStr.includes("-")) {
+            const parts = pageStr.split("-");
+            const startPage = parseInt(parts[0], 10);
+            const endPage = parseInt(parts[1], 10);
+
+            if (!isNaN(startPage) && !isNaN(endPage)) {
+                for (let p = startPage; p <= endPage; p++) {
+                    pagesArray.push(`/static/pages/Sankey_${p}.jpg`);
+                }
+            }
+        } else {
+            const singlePage = parseInt(pageStr, 10);
+            if (!isNaN(singlePage)) {
+                // Load the current page specified in JSON
+                pagesArray.push(`/static/pages/Sankey_${singlePage}.jpg`);
+                // ALWAYS pre-load the next page into the sequence list!
+                // This resolves the shared layout issue if a song overflows past its marker.
+                pagesArray.push(`/static/pages/Sankey_${singlePage + 1}.jpg`);
+            }
+        }
+
+        if (pagesArray.length > 0) {
+            activeHymnPages = pagesArray;
+        }
+    }
+
     if (!activeHymnPages) {
-        const fallbackPath = `/static/pages/Sankey_${selectedHymn.number}.jpg`;
-        activeHymnPages = [fallbackPath];
+        activeHymnPages = [`/static/pages/Sankey_${selectedHymn.number}.jpg`];
     }
 
     if (typeof activeHymnPages === 'string') {
@@ -591,9 +619,9 @@ function renderPage(){
     document.getElementById("scoreViewer").innerHTML = `
         <div class="card">
             <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
-                <button onclick="previousPage()" ${isFirst ? 'disabled' : ''}>← Previous</button>
-                <button disabled>Sheet ${currentImageIndex + 1} / ${activeHymnPages.length}</button>
-                <button onclick="nextPage()" ${isLast ? 'disabled' : ''}>Next →</button>
+                <button onclick="previousPage()" ${isFirst ? 'disabled' : ''}>← Previous Page</button>
+                <button disabled>Sheet Viewer (${currentImageIndex + 1} / ${activeHymnPages.length})</button>
+                <button onclick="nextPage()" ${isLast ? 'disabled' : ''}>Next Page →</button>
             </div>
             <img src="${currentImageUrl}" alt="Hymn Sheet Music View" onerror="this.onerror=null; this.style.display='none'; alert('Missing Image Target! Make sure file exists at: ' + '${currentImageUrl}');">
         </div>`;
