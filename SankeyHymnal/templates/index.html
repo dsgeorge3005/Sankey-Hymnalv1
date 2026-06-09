@@ -15,9 +15,17 @@
         overflow-x: hidden;
     }
 
+    /* Base layout container wrapper with transition engine */
     .container{
         max-width:900px;
         margin:auto;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+    }
+
+    /* Smoothly pushes the score and page layout leftward when music drawer is active */
+    body.drawer-open .container {
+        transform: translateX(-180px);
+        opacity: 0.6; /* Slightly dims background to pull visual focus to tools */
     }
 
     h1{
@@ -86,20 +94,12 @@
         .dashboard-grid { grid-template-columns: 1fr; }
         h1 { font-size: 32px; }
         body { padding: 15px; }
+        /* Prevent excessive cutoff on narrow mobile display structures */
+        body.drawer-open .container {
+            transform: translateX(-280px);
+            opacity: 0.2;
+        }
     }
-
-    .dash-box {
-        background: white;
-        padding: 20px;
-        border-radius: 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,.04);
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        transition: background 0.3s;
-    }
-
-    .dash-box h3 { margin: 0 0 5px 0; }
 
     /* --- SIDE MUSICAL DRAWER SYSTEM --- */
     .side-drawer {
@@ -129,7 +129,7 @@
         justify-content: space-between;
         align-items: center;
         border-bottom: 1px solid #eee;
-        padding-bottom: 10px;
+        padding-bottom: 15px; /* Added padding breathe room */
     }
 
     .drawer-header h2 { margin: 0; font-size: 22px; }
@@ -252,6 +252,18 @@
         transition: background 0.3s;
     }
 
+    .dash-box {
+        background: white;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,.04);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        transition: background 0.3s;
+    }
+    .dash-box h3 { margin: 0 0 5px 0; }
+
     .actions{
         margin-top:15px;
         display:flex;
@@ -302,7 +314,7 @@
 <div id="musicalDrawer" class="side-drawer">
     <div class="drawer-header">
         <h2>🎼 Musician Toolkit</h2>
-        <button onclick="toggleDrawer()" style="padding: 6px 12px; font-size:14px;">← Go Back</button>
+        <button onclick="toggleDrawer()" style="padding: 6px 14px; font-size:14px; margin-left: 20px;">← Go Back</button>
     </div>
 
     <div class="keyboard-container">
@@ -399,9 +411,7 @@
 </div>
 
 <script>
-// Exhaustive Musical Terms & Time Signature Database
 const glossaryTerms = [
-    /* Time Signatures & Structure Rules */
     { name: "4/4 Time (Common Time)", def: "4 beats per measure. Each quarter note gets 1 count. The structural default pulse." },
     { name: "3/4 Time (Waltz Meter)", def: "3 beats per measure. Used heavily in classical waltzes and historic hymns." },
     { name: "2/4 Time (March Meter)", def: "2 beats per measure. Strong-weak regular alternating stride pulse." },
@@ -411,8 +421,6 @@ const glossaryTerms = [
     { name: "12/8 Time", def: "Compound quadruple meter with 4 primary pulses. Heavy rolling gospel rhythm vibe." },
     { name: "5/4 Time", def: "An asymmetric irregular meter counted in unbalanced clusters of 3+2 or 2+3." },
     { name: "7/4 Time", def: "An asymmetric irregular complex meter broken down into groups of 4+3 or 2+2+3." },
-    
-    /* Durations & Notes */
     { name: "Semibreve (Whole Note)", def: "Lasts for 4 beats in standard 4/4 common arrangements." },
     { name: "Minim (Half Note)", def: "Lasts for exactly 2 beats." },
     { name: "Crotchet (Quarter Note)", def: "Lasts for exactly 1 fundamental beat." },
@@ -421,8 +429,6 @@ const glossaryTerms = [
     { name: "Demisemiquaver", def: "A thirty-second note. An exceptionally fast structural value (1/8 of a beat)." },
     { name: "Breve", def: "A double whole note value lasting 8 full counts. Common in historical scores." },
     { name: "Triplet", def: "Three notes compressed together to fit the standard playing time of two notes." },
-
-    /* Tempo Markings */
     { name: "Grave", def: "Extremely slow, solemn, weighty and deep pacing framework (25-45 BPM)." },
     { name: "Largo", def: "Broad, stately, and very slow performance pacing (40-60 BPM)." },
     { name: "Adagio", def: "Slow, tranquil, expressive, and comfortable ease tempo (66-76 BPM)." },
@@ -436,8 +442,6 @@ const glossaryTerms = [
     { name: "Accelerando", def: "Gradually speeding up the tempo execution frame." },
     { name: "A Tempo", def: "Instantly return to the original initial baseline song speed." },
     { name: "Rubato", def: "Flexible, expressive manipulation of time by stretching and compressing the tempo." },
-
-    /* Dynamics & Volume */
     { name: "Pianissimo (pp)", def: "Perform the notes extremely softly and quietly." },
     { name: "Piano (p)", def: "Perform the notes softly." },
     { name: "Mezzo Piano (mp)", def: "Moderately soft dynamic volume layout." },
@@ -447,8 +451,6 @@ const glossaryTerms = [
     { name: "Crescendo (<)", def: "Gradually increasing the dynamic volume levels." },
     { name: "Decrescendo (>)", def: "Gradually decreasing the dynamic volume levels." },
     { name: "Sforzando (sfz)", def: "Sudden, loud, fierce accentuation focused on a single note or chord." },
-
-    /* Articulation & Systems */
     { name: "Legato", def: "Notes sung smoothly and linked seamlessly together without air gaps." },
     { name: "Staccato", def: "Notes played short, bouncy, and detached cleanly from each other." },
     { name: "Fermata", def: "Hold or sustain the note indefinitely until cut off by the leader." },
@@ -470,29 +472,25 @@ const baseFrequencies = {
     'F': 21.83, 'F#': 23.12, 'G': 24.50, 'G#': 25.96, 'A': 27.50, 'A#': 29.14, 'B': 30.87, 'C2': 32.70
 };
 
-// 🎹 Acoustic Piano FM Synth Engine
+// Acoustic Piano FM Synth Engine
 function playTone(note) {
     let fundamental = baseFrequencies[note] * Math.pow(2, activeOctave);
     let now = audioCtx.currentTime;
     
-    // Master Gain for volume envelope
     let masterGain = audioCtx.createGain();
     masterGain.connect(audioCtx.destination);
 
-    // Dynamic Volume Envelope (ADSR tailored for an Acoustic Grand String Strike)
     masterGain.gain.setValueAtTime(0, now);
-    masterGain.gain.linearRampToValueAtTime(0.45, now + 0.006); // Quick, aggressive strike attack
-    masterGain.gain.exponentialRampToValueAtTime(0.12, now + 0.28); // Drop down to sustaining timbre resonance
-    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8); // Long natural decay trailing out
+    masterGain.gain.linearRampToValueAtTime(0.45, now + 0.006); 
+    masterGain.gain.exponentialRampToValueAtTime(0.12, now + 0.28); 
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8); 
 
-    // Array configuration of overtones/harmonics to capture realistic wood-and-string timber
-    // format: [frequency multiplier, relative volume intensity, wave profile type]
     const overtones = [
-        [1.0,  0.50, 'sine'],     // Fundamental core baseline tone
-        [2.0,  0.25, 'sine'],     // 1st Overtone (Octave up) - clarity
-        [3.0,  0.12, 'triangle'], // 2nd Overtone (Fifth) - warmth and string grit
-        [4.0,  0.06, 'sine'],     // 3rd Overtone (Double octave) - bell resonance
-        [5.0,  0.03, 'sine']      // 4th Overtone (Major third ring)
+        [1.0,  0.50, 'sine'],     
+        [2.0,  0.25, 'sine'],     
+        [3.0,  0.12, 'triangle'], 
+        [4.0,  0.06, 'sine'],     
+        [5.0,  0.03, 'sine']      
     ];
 
     overtones.forEach(([multiplier, volumeFactor, waveType]) => {
@@ -502,14 +500,11 @@ function playTone(note) {
         osc.type = waveType;
         osc.frequency.setValueAtTime(fundamental * multiplier, now);
 
-        // Slightly detune higher harmonics slightly to mimic natural physical string tension variance
         if (multiplier > 1.0) {
             osc.detune.setValueAtTime((multiplier - 1) * 2.5, now);
         }
 
         toneGain.gain.setValueAtTime(volumeFactor, now);
-        
-        // Make higher-pitched frequencies decay faster (just like real short acoustic strings)
         toneGain.gain.exponentialRampToValueAtTime(0.001, now + (1.8 / multiplier));
 
         osc.connect(toneGain);
@@ -527,8 +522,17 @@ function shiftOctave(direction) {
     document.getElementById("octaveDisplay").innerText = "Octave: " + activeOctave;
 }
 
+// Controls shifting both the drawer UI layer and background score container
 function toggleDrawer() {
-    document.getElementById("musicalDrawer").classList.toggle("open");
+    const drawer = document.getElementById("musicalDrawer");
+    drawer.classList.toggle("open");
+    
+    // Toggle the shifting helper class directly on the body tag
+    if (drawer.classList.contains("open")) {
+        document.body.classList.add("drawer-open");
+    } else {
+        document.body.classList.remove("drawer-open");
+    }
 }
 
 // Metronome Matrix Configuration Engine
@@ -611,7 +615,6 @@ function stopMetronome() {
     currentBeat = 0;
 }
 
-// Live Glossary Filter Functions
 function populateGlossary(list) {
     const box = document.getElementById("glossaryList");
     let html = "";
@@ -646,7 +649,6 @@ const searchBox = document.getElementById("searchBox");
 const suggestionsBox = document.getElementById("suggestions");
 let currentFocus = -1;
 
-// Global tracking arrays (Safe Architecture Cache)
 let searchResultsCache = [];
 let activeHymnPages = [];
 let currentImageIndex = 0;
@@ -741,7 +743,6 @@ async function searchHymn(){
     const data = await response.json();
     let html = "";
 
-    // Store search items safely inside browser memory cache to avoid HTML string breaks
     searchResultsCache = data;
 
     if(data.length === 0){
@@ -792,7 +793,6 @@ function renderPage(){
     if(!activeHymnPages || activeHymnPages.length === 0) return;
     
     const currentImageUrl = activeHymnPages[currentImageIndex];
-    
     const isFirst = currentImageIndex === 0;
     const isLast = currentImageIndex === activeHymnPages.length - 1;
 
@@ -803,7 +803,7 @@ function renderPage(){
                 <button disabled>Sheet ${currentImageIndex + 1} / ${activeHymnPages.length}</button>
                 <button onclick="nextPage()" ${isLast ? 'disabled' : ''}>Next Page →</button>
             </div>
-            <img src="${currentImageUrl}" alt="Hymn Sheet Music View" onerror="this.onerror=null; this.src=''; alert('Could not load image file at: ' + '${currentImageUrl}' + '\\n\\nPlease verify that this specific file exists inside your GitHub static/pages/ or static/pages2/ folder using the exact name format: Sankey_[num].jpg');">
+            <img src="${currentImageUrl}" alt="Hymn Sheet Music View" onerror="this.onerror=null; this.src=''; alert('Could not load image file at: ' + '${currentImageUrl}');">
         </div>`;
     document.getElementById("scoreViewer").scrollIntoView({ behavior:"smooth" });
 }
