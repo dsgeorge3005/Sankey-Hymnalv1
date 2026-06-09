@@ -189,13 +189,11 @@
     .voice-part{ font-weight:600; font-size:16px; margin-bottom:10px; }
     .audio-card audio{ width:100%; }
 
-    /* Setlist Builder UI Components */
     .setlist-pill-box { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; min-height: 40px; align-items: center;}
     .setlist-pill { background: #e8e8ed; padding: 8px 14px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; color: black; }
     .setlist-pill:hover { background: #d1d1d6; }
     .setlist-pill .remove-btn { color: #ff3b30; font-weight: bold; cursor: pointer; margin-left: 4px; }
 
-    /* Saved Overview List Box */
     .saved-setlists-panel {
         background: #f5f5f7;
         border-radius: 14px;
@@ -635,7 +633,7 @@ window.onload = function(){
 };
 
 
-/* --- FIXED ENGINE SEARCH & SCORE LOGIC --- */
+/* --- FIXED AND CLEANED AUTO-LOAD ROUTING CONTROLLER --- */
 const searchBox = document.getElementById("searchBox");
 const suggestionsBox = document.getElementById("suggestions");
 let currentFocus = -1;
@@ -655,8 +653,12 @@ searchBox.addEventListener("keydown", function(e){
     else if (e.key === "ArrowUp") { e.preventDefault(); currentFocus--; addActive(items); } 
     else if (e.key === "Enter") {
         e.preventDefault();
-        if (currentFocus > -1 && items[currentFocus]) { items[currentFocus].click(); } 
-        else { suggestionsBox.innerHTML = ""; searchHymn(); }
+        if (currentFocus > -1 && items[currentFocus]) { 
+            items[currentFocus].click(); 
+        } else { 
+            suggestionsBox.innerHTML = ""; 
+            searchHymn(); 
+        }
     }
 });
 
@@ -664,12 +666,16 @@ searchBox.addEventListener("input", showSuggestions);
 document.addEventListener("click", (e) => { if (e.target !== searchBox) suggestionsBox.innerHTML = ""; });
 
 async function showSuggestions(){
-    const query = searchBox.value.trim();
+    let query = searchBox.value.trim();
     currentFocus = -1;
     if(query.length < 1){ 
         suggestionsBox.innerHTML = ""; 
         return; 
     }
+    
+    if(query.includes(" — ")) query = query.split(" — ")[0];
+    if(query.includes(" - ")) query = query.split(" - ")[0];
+
     try {
         const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
         const data = await response.json();
@@ -683,7 +689,7 @@ async function showSuggestions(){
 }
 
 function selectSuggestion(number, title) {
-    searchBox.value = number; // Keep just the clean identifier for the input
+    searchBox.value = number; 
     suggestionsBox.innerHTML = "";
     searchHymn(number);
 }
@@ -705,7 +711,6 @@ async function searchHymn(exactNumber = null){
     let query = searchBox.value.trim();
     if(!query) return;
     
-    // Parse pure layout strings
     if(query.includes(" — ")) query = query.split(" — ")[0];
     if(query.includes(" - ")) query = query.split(" - ")[0];
     if(exactNumber) query = exactNumber;
@@ -723,11 +728,10 @@ async function searchHymn(exactNumber = null){
             return;
         }
 
-        // Filter cleanly if an exact numerical value was selected
         let finalData = data;
         if(exactNumber) {
             finalData = data.filter(hymn => String(hymn.number).trim() === String(exactNumber).trim());
-            if(finalData.length === 0) finalData = data; // fallback safety
+            if(finalData.length === 0) finalData = data; 
         }
         
         searchResultsCache = finalData;
@@ -761,12 +765,11 @@ async function searchHymn(exactNumber = null){
 
         document.getElementById("results").innerHTML = html;
         
-        // AUTO-LOAD first score automatically when targeted explicitly
         if(searchResultsCache.length > 0) {
             showScoreFromCache(0);
         }
     } catch (e) {
-        console.error("Critical issue fetching search queries:", e);
+        console.error("Critical fallback runtime trace protection triggered:", e);
     }
 }
 
@@ -774,54 +777,52 @@ function showScoreFromCache(index) {
     const selectedHymn = searchResultsCache[index];
     if (!selectedHymn) return;
     
-    // Standard extraction
-    activeHymnPages = selectedHymn.image_urls || selectedHymn.images || selectedHymn.pages;
-    
-    if (!activeHymnPages && selectedHymn.page) {
-        const pageStr = String(selectedHymn.page).trim();
-        const pagesArray = [];
+    activeHymnPages = [];
 
+    // Check database object keys safely
+    let rawPages = selectedHymn.image_urls || selectedHymn.images || selectedHymn.pages || selectedHymn.image_path;
+    
+    if (rawPages) {
+        if (typeof rawPages === 'string') activeHymnPages = [rawPages];
+        else if (Array.isArray(rawPages)) activeHymnPages = rawPages;
+    }
+
+    // Direct page range logic protection
+    if (activeHymnPages.length === 0 && selectedHymn.page !== undefined && selectedHymn.page !== null) {
+        const pageStr = String(selectedHymn.page).trim();
         if (pageStr.includes("-")) {
             const parts = pageStr.split("-");
             const startPage = parseInt(parts[0], 10);
             const endPage = parseInt(parts[1], 10);
-
             if (!isNaN(startPage) && !isNaN(endPage)) {
                 for (let p = startPage; p <= endPage; p++) {
-                    pagesArray.push(`/static/pages/Sankey_${p}.jpg`);
+                    activeHymnPages.push(`/static/pages/Sankey_${p}.jpg`);
                 }
             }
         } else {
             const singlePage = parseInt(pageStr, 10);
             if (!isNaN(singlePage)) {
-                pagesArray.push(`/static/pages/Sankey_${singlePage}.jpg`);
-                pagesArray.push(`/static/pages/Sankey_${singlePage + 1}.jpg`);
+                activeHymnPages.push(`/static/pages/Sankey_${singlePage}.jpg`);
             }
         }
-
-        if (pagesArray.length > 0) {
-            activeHymnPages = pagesArray;
-        }
     }
 
-    if (!activeHymnPages) {
-        activeHymnPages = [`/static/pages/Sankey_${selectedHymn.number}.jpg`];
+    // Strict numerical ID backup asset resolution
+    if (activeHymnPages.length === 0 && selectedHymn.number) {
+        const cleanNum = String(selectedHymn.number).trim();
+        activeHymnPages = [`/static/pages/Sankey_${cleanNum}.jpg`];
     }
 
-    if (typeof activeHymnPages === 'string') {
-        activeHymnPages = [activeHymnPages];
-    }
-
-    if (activeHymnPages && activeHymnPages.length > 0) {
-        currentImageIndex = 0;
-        renderPage();
-    } else {
-        alert("Could not process score asset path layouts.");
-    }
+    currentImageIndex = 0;
+    renderPage();
 }
 
 function renderPage(){
-    if(!activeHymnPages || activeHymnPages.length === 0) return;
+    if(!activeHymnPages || activeHymnPages.length === 0) {
+        document.getElementById("scoreViewer").innerHTML = "";
+        return;
+    }
+    
     const currentImageUrl = activeHymnPages[currentImageIndex];
     const isFirst = currentImageIndex === 0;
     const isLast = currentImageIndex === activeHymnPages.length - 1;
@@ -830,12 +831,24 @@ function renderPage(){
         <div class="card">
             <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
                 <button onclick="previousPage()" ${isFirst ? 'disabled' : ''}>← Previous Page</button>
-                <button disabled style="background:#007aff;">Sheet Viewer (${currentImageIndex + 1} / ${activeHymnPages.length})</button>
+                <button disabled style="background:#007aff; opacity: 1; color: white;">Sheet Viewer (${currentImageIndex + 1} / ${activeHymnPages.length})</button>
                 <button onclick="nextPage()" ${isLast ? 'disabled' : ''}>Next Page →</button>
             </div>
-            <img src="${currentImageUrl}" alt="Hymn Sheet Music View" onerror="this.onerror=null; this.style.display='none'; alert('Missing Image Target! Make sure file exists at: ' + '${currentImageUrl}');">
+            <img src="${currentImageUrl}" alt="Hymn Sheet Music View" onerror="handleImageError(this, '${currentImageUrl}')">
         </div>`;
     document.getElementById("scoreViewer").scrollIntoView({ behavior:"smooth" });
+}
+
+function handleImageError(imgObj, originalUrl) {
+    if (!imgObj.getAttribute('data-retry')) {
+        imgObj.setAttribute('data-retry', '1');
+        if (originalUrl.endsWith('.jpg')) {
+            imgObj.src = originalUrl.replace('.jpg', '.png');
+            return;
+        }
+    }
+    imgObj.style.display = 'none';
+    alert(`Could not load score asset sheet view at destination path:\n${originalUrl}`);
 }
 
 function nextPage(){ if(currentImageIndex < activeHymnPages.length - 1){ currentImageIndex++; renderPage(); } }
