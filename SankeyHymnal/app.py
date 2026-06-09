@@ -53,41 +53,48 @@ def search():
                 pages = [hymn.get("page", hymn["number"])]
 
             # -------------------------------------------------------------
-            # 🖼️ TWO-FOLDER MULTI-PATH ROUTING ENGINE
+            # 🖼️ PRODUCTION-READY MULTI-FOLDER ROUTING ENGINE
             # -------------------------------------------------------------
             image_urls = []
+            
             for p in pages:
                 try:
                     page_num_int = int(p)
                 except ValueError:
                     page_num_int = 0
 
-                # Determine folder based on page threshold
-                # Pages 1-1000 go to 'pages/', Pages 1001+ go to 'pages2/'
-                if page_num_int <= 1000:
-                    folder_target = "pages"
-                else:
-                    folder_target = "pages2"
-
-                page_file = f"{folder_target}/{p}.png"
-                page_path = os.path.join(BASE_DIR, "static", page_file)
-
-                # DUAL PATH FALLBACK: If page number file is missing, try Hymn Number fallback
-                if not os.path.exists(page_path):
-                    # Check if the hymn number works in either folder
-                    try:
-                        hymn_num_int = int(hymn["number"])
-                    except ValueError:
-                        hymn_num_int = 0
-
-                    hymn_folder = "pages" if hymn_num_int <= 1000 else "pages2"
-                    hymn_num_file = f"{hymn_folder}/{hymn['number']}.png"
-                    hymn_num_path = os.path.join(BASE_DIR, "static", hymn_num_file)
+                # Strategy 1: Attempt to route using Calculated Page Number
+                if page_num_int > 0:
+                    folder_target = "pages" if page_num_int <= 1000 else "pages2"
+                    filename_target = f"{folder_target}/{page_num_int}.png"
                     
-                    if os.path.exists(hymn_num_path):
-                        page_file = hymn_num_file
+                    # Verify using relative deployment directory path mapping
+                    full_check_path = os.path.join(app.static_folder, filename_target)
+                    
+                    # Case-Insensitive Extension Check (.png vs .PNG)
+                    if not os.path.exists(full_check_path):
+                        alt_check_path = os.path.join(app.static_folder, f"{folder_target}/{page_num_int}.PNG")
+                        if os.path.exists(alt_check_path):
+                            filename_target = f"{folder_target}/{page_num_int}.PNG"
+                        else:
+                            # Strategy 2: If page file doesn't exist, fall back to Hymn Number routing
+                            try:
+                                hymn_num_int = int(hymn["number"])
+                            except ValueError:
+                                hymn_num_int = 0
+                            
+                            hymn_folder = "pages" if hymn_num_int <= 1000 else "pages2"
+                            filename_target = f"{hymn_folder}/{hymn['number']}.png"
+                            
+                            # Final double-check for uppercase .PNG on the hymn number fallback
+                            final_check = os.path.join(app.static_folder, filename_target)
+                            if not os.path.exists(final_check) and os.path.exists(os.path.join(app.static_folder, f"{hymn_folder}/{hymn['number']}.PNG")):
+                                filename_target = f"{hymn_folder}/{hymn['number']}.PNG"
+                else:
+                    # Strategy 3: Complete safety baseline if data parsing fails entirely
+                    filename_target = f"pages/{hymn['number']}.png"
 
-                img_url = url_for('static', filename=page_file)
+                img_url = url_for('static', filename=filename_target)
                 image_urls.append(img_url)
             
             hymn_copy["image_urls"] = image_urls
