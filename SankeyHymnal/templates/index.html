@@ -311,6 +311,7 @@
         </div>
     </div>
 
+    <!-- SETLIST MANAGER PANEL -->
     <div id="weeklyDashboard" class="dashboard-content">
         <div class="dashboard-grid">
             <div class="dash-box">
@@ -633,7 +634,7 @@ window.onload = function(){
 };
 
 
-/* --- FIXED AND CLEANED AUTO-LOAD ROUTING CONTROLLER --- */
+/* --- FIXED AND ALIGNED AUTO-LOAD ROUTING CONTROLLER --- */
 const searchBox = document.getElementById("searchBox");
 const suggestionsBox = document.getElementById("suggestions");
 let currentFocus = -1;
@@ -769,7 +770,7 @@ async function searchHymn(exactNumber = null){
             showScoreFromCache(0);
         }
     } catch (e) {
-        console.error("Critical fallback runtime trace protection triggered:", e);
+        console.error("Critical Fallback Error:", e);
     }
 }
 
@@ -778,13 +779,19 @@ function showScoreFromCache(index) {
     if (!selectedHymn) return;
     
     activeHymnPages = [];
-    let rawPages = selectedHymn.image_urls || selectedHymn.images || selectedHymn.pages || selectedHymn.image_path;
+    
+    // 1. Check for explicit file structural properties in your hymns.json
+    let rawPages = selectedHymn.image_path || selectedHymn.image_urls || selectedHymn.images || selectedHymn.pages;
     
     if (rawPages) {
-        if (typeof rawPages === 'string') activeHymnPages = [rawPages];
-        else if (Array.isArray(rawPages)) activeHymnPages = rawPages;
+        if (typeof rawPages === 'string') {
+            activeHymnPages = [rawPages];
+        } else if (Array.isArray(rawPages)) {
+            activeHymnPages = rawPages;
+        }
     }
 
+    // 2. Alignment fix: Parse numeric pages if no direct image property was provided
     if (activeHymnPages.length === 0 && selectedHymn.page !== undefined && selectedHymn.page !== null) {
         const pageStr = String(selectedHymn.page).trim();
         if (pageStr.includes("-")) {
@@ -804,6 +811,7 @@ function showScoreFromCache(index) {
         }
     }
 
+    // 3. Fall back directly to hymn number index naming if pages aren't defined
     if (activeHymnPages.length === 0 && selectedHymn.number) {
         const cleanNum = String(selectedHymn.number).trim();
         activeHymnPages = [`/static/pages/Sankey_${cleanNum}.jpg`];
