@@ -767,7 +767,7 @@ function renderPage(){
                 <button disabled>Sheet ${currentImageIndex + 1} / ${activeHymnPages.length}</button>
                 <button onclick="nextPage()" ${isLast ? 'disabled' : ''}>Next Page →</button>
             </div>
-            <img src="${currentImageUrl}" alt="Hymn Sheet Music View" onerror="this.onerror=null; this.src=''; alert('Image file could not be found in static/pages2/. Please cross check your filenames vs your page column parameters inside hymns.json.');">
+            <img src="${currentImageUrl}" alt="Hymn Sheet Music View" onerror="this.onerror=null; this.src=''; alert('Could not load image file at: ' + '${currentImageUrl}' + '\\n\\nPlease verify that this specific file exists inside your GitHub static/pages/ or static/pages2/ folder using the exact name format: Sankey_[num].jpg');">
         </div>`;
     document.getElementById("scoreViewer").scrollIntoView({ behavior:"smooth" });
 }
