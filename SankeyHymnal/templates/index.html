@@ -269,7 +269,7 @@
     <h1>Sankey Hymnal</h1>
 
     <div class="search-bar">
-        <input id="searchBox" placeholder="Search hymn number or title">
+        <input id="searchBox" placeholder="Search hymn number or title" autocomplete="off">
         <button onclick="searchHymn()">Search</button>
     </div>
     
@@ -280,56 +280,15 @@
 
 <script>
 const glossaryTerms = [
-    { name: "4/4 Time (Common Time)", def: "4 beats per measure. Each quarter note gets 1 count. The structural default pulse." },
+    { name: "4/4 Time (Common Time)", def: "4 beats per measure. Each quarter note gets 1 count." },
     { name: "3/4 Time (Waltz Meter)", def: "3 beats per measure. Used heavily in classical waltzes and historic hymns." },
     { name: "2/4 Time (March Meter)", def: "2 beats per measure. Strong-weak regular alternating stride pulse." },
-    { name: "2/2 Time (Cut Time / Alla Breve)", def: "2 beats per measure, but the half note gets the beat count. Streamlines fast pieces." },
-    { name: "6/8 Time", def: "Compound meter with 2 primary macro-pulses, each dividing into three eighth notes (3+3 layout)." },
-    { name: "9/8 Time", def: "Compound triple meter with 3 primary pulses, totaling 9 eighth notes per bar." },
-    { name: "12/8 Time", def: "Compound quadruple meter with 4 primary pulses. Heavy rolling gospel rhythm vibe." },
-    { name: "5/4 Time", def: "An asymmetric irregular meter counted in unbalanced clusters of 3+2 or 2+3." },
-    { name: "7/4 Time", def: "An asymmetric irregular complex meter broken down into groups of 4+3 or 2+2+3." },
-    { name: "Semibreve (Whole Note)", def: "Lasts for 4 beats in standard 4/4 common arrangements." },
-    { name: "Minim (Half Note)", def: "Lasts for exactly 2 beats." },
-    { name: "Crotchet (Quarter Note)", def: "Lasts for exactly 1 fundamental beat." },
-    { name: "Quaver (Eighth Note)", def: "Lasts for half (1/2) of a single standard crotchet beat count." },
-    { name: "Semiquaver (Sixteenth Note)", def: "Lasts for a quarter (1/4) of a single standard beat." },
-    { name: "Demisemiquaver", def: "A thirty-second note. An exceptionally fast structural value (1/8 of a beat)." },
-    { name: "Breve", def: "A double whole note value lasting 8 full counts. Common in historical scores." },
-    { name: "Triplet", def: "Three notes compressed together to fit the standard playing time of two notes." },
-    { name: "Grave", def: "Extremely slow, solemn, weighty and deep pacing framework (25-45 BPM)." },
-    { name: "Largo", def: "Broad, stately, and very slow performance pacing (40-60 BPM)." },
-    { name: "Adagio", def: "Slow, tranquil, expressive, and comfortable ease tempo (66-76 BPM)." },
+    { name: "2/2 Time (Cut Time / Alla Breve)", def: "2 beats per measure, but the half note gets the beat count." },
+    { name: "6/8 Time", def: "Compound meter with 2 primary macro-pulses, dividing into three eighth notes." },
     { name: "Andante", def: "A moderate, unhurried, literal 'walking pace' configuration (76-108 BPM)." },
     { name: "Moderato", def: "Moderately paced; smack in the center of fast and slow (108-120 BPM)." },
     { name: "Allegro", def: "Fast, bright, cheerful, and lively execution speed (120-156 BPM)." },
-    { name: "Vivace", def: "Highly brisk, energetic, and rapid execution frame (~156-176 BPM)." },
-    { name: "Presto", def: "Extremely fast, sprint-like tempo configuration (168-200+ BPM)." },
-    { name: "Ritardando (Rit.)", def: "Gradually slowing down the speed performance pacing." },
-    { name: "Rallentando (Rall.)", def: "Gradually slowing down, but typically roomier and more deliberate than a Ritardando." },
-    { name: "Accelerando", def: "Gradually speeding up the tempo execution frame." },
-    { name: "A Tempo", def: "Instantly return to the original initial baseline song speed." },
-    { name: "Rubato", def: "Flexible, expressive manipulation of time by stretching and compressing the tempo." },
-    { name: "Pianissimo (pp)", def: "Perform the notes extremely softly and quietly." },
-    { name: "Piano (p)", def: "Perform the notes softly." },
-    { name: "Mezzo Piano (mp)", def: "Moderately soft dynamic volume layout." },
-    { name: "Mezzo Forte (mf)", def: "Moderately loud; standard target for common congregation singing." },
-    { name: "Forte (f)", def: "Sing or play loudly and with firm strength." },
-    { name: "Fortissimo (ff)", def: "Sing or play exceptionally loudly." },
-    { name: "Crescendo (<)", def: "Gradually increasing the dynamic volume levels." },
-    { name: "Decrescendo (>)", def: "Gradually decreasing the dynamic volume levels." },
-    { name: "Sforzando (sfz)", def: "Sudden, loud, fierce accentuation focused on a single note or chord." },
-    { name: "Legato", def: "Notes sung smoothly and linked seamlessly together without air gaps." },
-    { name: "Staccato", def: "Notes played short, bouncy, and detached cleanly from each other." },
-    { name: "Fermata", def: "Hold or sustain the note indefinitely until cut off by the leader." },
-    { name: "Tenuto", def: "Hold the note out for its exact absolute value while giving it slight weight." },
-    { name: "Glissando", def: "A seamless continuous slide upwards or downwards between two distinct pitches." },
-    { name: "Cantabile", def: "In a flowing, lyrical, song-like graceful performance delivery style." },
-    { name: "Maestoso", def: "Majestically, grandly, and with stately configuration elegance." },
-    { name: "Da Capo (D.C.)", def: "Structural command to immediately jump back to the very beginning of the song." },
-    { name: "Dal Segno (D.S.)", def: "Structural command to repeat music starting back from the 'Sign' marker." },
-    { name: "Fine", def: "Indicates the absolute true conclusion and endpoint of the entire song." },
-    { name: "Coda", def: "An expanded closing section or custom musical outro layout." }
+    { name: "Fermata", def: "Hold or sustain the note indefinitely until cut off by the leader." }
 ];
 
 // Audio Configuration
@@ -346,60 +305,38 @@ function playTone(note) {
     
     let masterGain = audioCtx.createGain();
     masterGain.connect(audioCtx.destination);
-
     masterGain.gain.setValueAtTime(0, now);
     masterGain.gain.linearRampToValueAtTime(0.45, now + 0.006); 
     masterGain.gain.exponentialRampToValueAtTime(0.12, now + 0.28); 
     masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8); 
 
-    const overtones = [
-        [1.0,  0.50, 'sine'],     
-        [2.0,  0.25, 'sine'],     
-        [3.0,  0.12, 'triangle'], 
-        [4.0,  0.06, 'sine'],     
-        [5.0,  0.03, 'sine']      
-    ];
-
+    const overtones = [[1.0, 0.50, 'sine'], [2.0, 0.25, 'sine'], [3.0, 0.12, 'triangle']];
     overtones.forEach(([multiplier, volumeFactor, waveType]) => {
         let osc = audioCtx.createOscillator();
         let toneGain = audioCtx.createGain();
-
         osc.type = waveType;
         osc.frequency.setValueAtTime(fundamental * multiplier, now);
-
-        if (multiplier > 1.0) {
-            osc.detune.setValueAtTime((multiplier - 1) * 2.5, now);
-        }
-
         toneGain.gain.setValueAtTime(volumeFactor, now);
         toneGain.gain.exponentialRampToValueAtTime(0.001, now + (1.8 / multiplier));
-
         osc.connect(toneGain);
         toneGain.connect(masterGain);
-
         osc.start(now);
         osc.stop(now + 1.8);
     });
 }
 
 function shiftOctave(direction) {
-    activeOctave += direction;
-    if (activeOctave < 2) activeOctave = 2;
-    if (activeOctave > 6) activeOctave = 6;
+    activeOctave = Math.max(2, Math.min(6, activeOctave + direction));
     document.getElementById("octaveDisplay").innerText = "Octave: " + activeOctave;
 }
 
 function toggleDrawer() {
     const drawer = document.getElementById("musicalDrawer");
     drawer.classList.toggle("open");
-    if (drawer.classList.contains("open")) {
-        document.body.classList.add("drawer-open");
-    } else {
-        document.body.classList.remove("drawer-open");
-    }
+    document.body.classList.toggle("drawer-open", drawer.classList.contains("open"));
 }
 
-// Metronome Logic
+// Metronome
 let metroInterval = null;
 let isMetroRunning = false;
 let bpm = 100;
@@ -415,147 +352,84 @@ function updateBpm(val) {
 
 function updateTimeSignature(val) {
     if (val === "2_cut") { beatsPerMeasure = 2; timingFactor = 2.0; } 
-    else if (val === "3_8") { beatsPerMeasure = 3; timingFactor = 0.5; }
-    else if (val === "6") { beatsPerMeasure = 6; timingFactor = 0.5; }
-    else if (val === "9") { beatsPerMeasure = 9; timingFactor = 0.5; }
-    else if (val === "12") { beatsPerMeasure = 12; timingFactor = 0.5; }
+    else if (val === "3_8" || val === "6" || val === "9" || val === "12") { beatsPerMeasure = parseInt(val) || 6; timingFactor = 0.5; }
     else { beatsPerMeasure = parseInt(val); timingFactor = 1.0; }
     
     currentBeat = 0;
-    const container = document.getElementById("metroVisualsContainer");
     let html = "";
-    for(let i = 0; i < beatsPerMeasure; i++) {
-        html += `<div class="metro-dot" id="dotM${i}"></div>`;
-    }
-    container.innerHTML = html;
-
+    for(let i = 0; i < beatsPerMeasure; i++) { html += `<div class="metro-dot" id="dotM${i}"></div>`; }
+    document.getElementById("metroVisualsContainer").innerHTML = html;
     if (isMetroRunning) { stopMetronome(); startMetronome(); }
 }
 
-function toggleMetronome() {
-    if (isMetroRunning) { stopMetronome(); } else { startMetronome(); }
-}
-
+function toggleMetronome() { if (isMetroRunning) { stopMetronome(); } else { startMetronome(); } }
 function startMetronome() {
     isMetroRunning = true;
     document.getElementById("metroBtn").innerText = "⏹ Stop";
     document.getElementById("metroBtn").style.background = "#ff3b30";
-    const intervalMs = ((60 / bpm) * 1000) * timingFactor;
-    
     metroInterval = setInterval(() => {
-        for(let i=0; i<beatsPerMeasure; i++){
-            let d = document.getElementById(`dotM${i}`);
-            if(d) d.classList.remove('active');
-        }
-        let targetDot = document.getElementById(`dotM${currentBeat}`);
-        if(targetDot) targetDot.classList.add('active');
-        
+        for(let i=0; i<beatsPerMeasure; i++){ document.getElementById(`dotM${i}`)?.classList.remove('active'); }
+        document.getElementById(`dotM${currentBeat}`)?.classList.add('active');
         let osc = audioCtx.createOscillator();
         let gainNode = audioCtx.createGain();
         osc.frequency.setValueAtTime(currentBeat === 0 ? 1150 : 680, audioCtx.currentTime); 
         gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-        osc.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.06);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.06);
         currentBeat = (currentBeat + 1) % beatsPerMeasure;
-    }, intervalMs);
+    }, ((60 / bpm) * 1000) * timingFactor);
 }
-
 function stopMetronome() {
-    isMetroRunning = false;
-    clearInterval(metroInterval);
+    isMetroRunning = false; clearInterval(metroInterval);
     document.getElementById("metroBtn").innerText = "▶ Start";
     document.getElementById("metroBtn").style.background = "";
-    for(let i=0; i<beatsPerMeasure; i++){
-        let d = document.getElementById(`dotM${i}`);
-        if(d) d.classList.remove('active');
-    }
     currentBeat = 0;
 }
 
 function populateGlossary(list) {
-    const box = document.getElementById("glossaryList");
     let html = "";
-    list.forEach(term => {
-        html += `<div class="term-item"><div class="term-name">${term.name}</div><div class="term-def">${term.def}</div></div>`;
-    });
-    box.innerHTML = html || `<div style="font-size:14px; color:#999; padding:10px 0;">No matching terms found.</div>`;
+    list.forEach(t => { html += `<div class="term-item"><div class="term-name">${t.name}</div><div class="term-def">${t.def}</div></div>`; });
+    document.getElementById("glossaryList").innerHTML = html || "<div>No terms found.</div>";
 }
+function filterGlossary(q) { populateGlossary(glossaryTerms.filter(t => t.name.toLowerCase().includes(q.toLowerCase()))); }
 
-function filterGlossary(query) {
-    const clean = query.toLowerCase().trim();
-    const filtered = glossaryTerms.filter(t => t.name.toLowerCase().includes(clean) || t.def.toLowerCase().includes(clean));
-    populateGlossary(filtered);
-}
-
-/* --- RE-ENGINEERED DEVICE-TO-DEVICE SYNC FRAMEWORK --- */
+/* --- SYNC PANEL --- */
 let syncDebounceTimer;
 let isUserTyping = false;
 
 async function fetchServerDashboardUpdate() {
-    // Stop server refreshes from breaking input states while actively typing
     if (isUserTyping) return;
-    
     try {
         const response = await fetch('/api/dashboard');
         const data = await response.json();
-        
-        // Only update text values if they don't match to avoid caret hopping bugs
-        if(document.getElementById("weeklyNotes").value !== (data.notes || "")) {
-            document.getElementById("weeklyNotes").value = data.notes || "";
-        }
-        if(document.getElementById("calendarPicker").value !== (data.date || "")) {
-            document.getElementById("calendarPicker").value = data.date || "";
-        }
-    } catch (err) {
-        console.error("Auto sync update pull failed:", err);
-    }
+        if(document.getElementById("weeklyNotes").value !== (data.notes || "")) document.getElementById("weeklyNotes").value = data.notes || "";
+        if(document.getElementById("calendarPicker").value !== (data.date || "")) document.getElementById("calendarPicker").value = data.date || "";
+    } catch (err) { console.error(err); }
 }
 
 function syncDashboardData() {
-    isUserTyping = true;
-    clearTimeout(syncDebounceTimer);
-    
+    isUserTyping = true; clearTimeout(syncDebounceTimer);
     syncDebounceTimer = setTimeout(async () => {
-        const notesVal = document.getElementById("weeklyNotes").value;
-        const dateVal = document.getElementById("calendarPicker").value;
-        
         try {
             await fetch('/api/dashboard', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ notes: notesVal, date: dateVal })
+                body: JSON.stringify({ notes: document.getElementById("weeklyNotes").value, date: document.getElementById("calendarPicker").value })
             });
-        } catch(err) { 
-            console.error("Cloud data save payload dropped:", err); 
-        } finally {
-            isUserTyping = false;
-        }
-    }, 500); // Send payload when typing stops for 500ms
+        } catch(err) { console.error(err); } finally { isUserTyping = false; }
+    }, 500);
 }
 
-// Core App Initialization Framework
 window.onload = function(){
-    if(localStorage.getItem("theme") === "dark"){
-        document.body.classList.add("dark-mode");
-    }
-    
-    // First data call
+    if(localStorage.getItem("theme") === "dark") document.body.classList.add("dark-mode");
     fetchServerDashboardUpdate();
-    
-    if(localStorage.getItem("dashboardOpen") === "true") {
-        document.getElementById("weeklyDashboard").classList.add("open");
-    }
-    
-    // Setup background interval engine to fetch remote updates every 4 seconds
+    if(localStorage.getItem("dashboardOpen") === "true") document.getElementById("weeklyDashboard").classList.add("open");
     setInterval(fetchServerDashboardUpdate, 4000);
-    
-    updateTimeSignature("4");
-    populateGlossary(glossaryTerms);
+    updateTimeSignature("4"); populateGlossary(glossaryTerms);
 };
 
+/* --- GOOGLE STYLE SEARCH ENGINE --- */
 const searchBox = document.getElementById("searchBox");
 const suggestionsBox = document.getElementById("suggestions");
 let currentFocus = -1;
@@ -564,57 +438,45 @@ let activeHymnPages = [];
 let currentImageIndex = 0;
 
 function toggleDashboard() {
-    const dash = document.getElementById("weeklyDashboard");
-    dash.classList.toggle("open");
-    localStorage.setItem("dashboardOpen", dash.classList.contains("open"));
-    if(dash.classList.contains("open")) { fetchServerDashboardUpdate(); }
+    const d = document.getElementById("weeklyDashboard");
+    d.classList.toggle("open"); localStorage.setItem("dashboardOpen", d.classList.contains("open"));
+    if(d.classList.contains("open")) fetchServerDashboardUpdate();
 }
+function toggleTheme(){ document.body.classList.toggle("dark-mode"); localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light"); }
 
-function toggleTheme(){
-    document.body.classList.toggle("dark-mode");
-    const dark = document.body.classList.contains("dark-mode");
-    localStorage.setItem("theme", dark ? "dark" : "light");
-}
-
-searchBox.addEventListener("keydown", function(event){
+searchBox.addEventListener("keydown", function(e){
     const items = suggestionsBox.getElementsByClassName("suggestion");
-    if (event.key === "ArrowDown") {
-        event.preventDefault(); currentFocus++; addActive(items);
-    } else if (event.key === "ArrowUp") {
-        event.preventDefault(); currentFocus--; addActive(items);
-    } else if (event.key === "Enter") {
-        event.preventDefault();
+    if (e.key === "ArrowDown") { e.preventDefault(); currentFocus++; addActive(items); } 
+    else if (e.key === "ArrowUp") { e.preventDefault(); currentFocus--; addActive(items); } 
+    else if (e.key === "Enter") {
+        e.preventDefault();
         if (currentFocus > -1 && items[currentFocus]) { items[currentFocus].click(); } 
         else { suggestionsBox.innerHTML = ""; searchHymn(); }
     }
 });
 
 searchBox.addEventListener("input", showSuggestions);
-document.addEventListener("click", function (e) {
-    if (e.target !== searchBox && e.target !== suggestionsBox) { suggestionsBox.innerHTML = ""; }
-});
+document.addEventListener("click", (e) => { if (e.target !== searchBox) suggestionsBox.innerHTML = ""; });
 
 async function showSuggestions(){
     const query = searchBox.value.trim();
     currentFocus = -1;
-    if(query.length < 2){ suggestionsBox.innerHTML = ""; return; }
+    if(query.length < 1){ suggestionsBox.innerHTML = ""; return; }
     try {
         const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
         const data = await response.json();
         let html = "";
         data.slice(0,10).forEach(hymn => {
             const safeTitle = hymn.title.replace(/'/g, "\\'");
-            html += `
-                <div class="suggestion" onclick="selectHymn('${hymn.number}','${safeTitle}')">
-                    <strong>${hymn.number}</strong> — ${hymn.title}
-                </div>`;
+            // Google Behavior: Populates the input bar cleanly on click and runs the query
+            html += `<div class="suggestion" onclick="selectSuggestion('${hymn.number}', '${safeTitle}')"><strong>${hymn.number}</strong> — ${hymn.title}</div>`;
         });
         suggestionsBox.innerHTML = html;
     } catch(err) { console.error(err); }
 }
 
-function selectHymn(number, title){
-    searchBox.value = number;
+function selectSuggestion(number, title) {
+    searchBox.value = `${number} - ${title}`;
     suggestionsBox.innerHTML = "";
     searchHymn();
 }
@@ -622,31 +484,25 @@ function selectHymn(number, title){
 function addActive(items) {
     if (!items || items.length === 0) return;
     removeActive(items);
-    if (currentFocus >= items.length) currentFocus = 0;
-    if (currentFocus < 0) currentFocus = items.length - 1;
+    currentFocus = (currentFocus + items.length) % items.length;
     items[currentFocus].classList.add("selected");
-    items[currentFocus].scrollIntoView({ block: "nearest" });
+    searchBox.value = items[currentFocus].innerText;
 }
+function removeActive(items) { for (let i = 0; i < items.length; i++) items[i].classList.remove("selected"); }
 
-function removeActive(items) {
-    for (let i = 0; i < items.length; i++) { items[i].classList.remove("selected"); }
-}
-
-function quickLoad(number) {
-    searchBox.value = number;
-    suggestionsBox.innerHTML = "";
-    document.getElementById("scoreViewer").innerHTML = "";
-    searchHymn();
-}
+function quickLoad(number) { searchBox.value = number; searchHymn(); }
 
 async function searchHymn(){
-    const query = searchBox.value.trim();
+    let query = searchBox.value.trim();
     if(!query) return;
+    
+    if(query.includes(" — ")) query = query.split(" — ")[0];
+    if(query.includes(" - ")) query = query.split(" - ")[0];
 
     const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
     const data = await response.json();
-    let html = "";
     searchResultsCache = data;
+    let html = "";
 
     if(data.length === 0){
         html = "<div class='card'>No hymns found.</div>";
@@ -669,7 +525,7 @@ async function searchHymn(){
                     ${hymn.next_hymn ? `<button onclick="quickLoad('${hymn.next_hymn}')">${hymn.next_hymn} →</button>` : '<span></span>'}
                 </div>
                 <h2>${hymn.number} - ${hymn.title}</h2>
-                <p>Page ${hymn.page}</p>
+                <p>Page ${hymn.page || ''}</p>
                 <div class="actions">
                     <button onclick="showScoreFromCache(${index})">View Score</button>
                     <a target="_blank" href="${yt}"><button style="width:100%;">YouTube</button></a>
@@ -679,16 +535,31 @@ async function searchHymn(){
         });
     }
     document.getElementById("results").innerHTML = html;
+    document.getElementById("scoreViewer").innerHTML = ""; 
 }
 
+/* --- DYNAMIC FALLBACK ROUTER ENGINE --- */
 function showScoreFromCache(index) {
     const selectedHymn = searchResultsCache[index];
-    if (selectedHymn && selectedHymn.image_urls) {
-        activeHymnPages = selectedHymn.image_urls;
+    if (!selectedHymn) return;
+    
+    activeHymnPages = selectedHymn.image_urls || selectedHymn.images || selectedHymn.pages;
+    
+    // Fallback: Maps structure directly to your local file path architecture
+    if (!activeHymnPages) {
+        const fallbackPath = `/static/pages/Sankey_${selectedHymn.number}.jpg`;
+        activeHymnPages = [fallbackPath];
+    }
+
+    if (typeof activeHymnPages === 'string') {
+        activeHymnPages = [activeHymnPages];
+    }
+
+    if (activeHymnPages && activeHymnPages.length > 0) {
         currentImageIndex = 0;
         renderPage();
     } else {
-        alert("Error reading score array mapping layout.");
+        alert("Could not load score structural path values.");
     }
 }
 
@@ -701,11 +572,11 @@ function renderPage(){
     document.getElementById("scoreViewer").innerHTML = `
         <div class="card">
             <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
-                <button onclick="previousPage()" ${isFirst ? 'disabled' : ''}>← Previous Page</button>
+                <button onclick="previousPage()" ${isFirst ? 'disabled' : ''}>← Previous</button>
                 <button disabled>Sheet ${currentImageIndex + 1} / ${activeHymnPages.length}</button>
-                <button onclick="nextPage()" ${isLast ? 'disabled' : ''}>Next Page →</button>
+                <button onclick="nextPage()" ${isLast ? 'disabled' : ''}>Next →</button>
             </div>
-            <img src="${currentImageUrl}" alt="Hymn Sheet Music View" onerror="this.onerror=null; this.src=''; alert('Could not load image file at: ' + '${currentImageUrl}');">
+            <img src="${currentImageUrl}" alt="Hymn Sheet Music View" onerror="this.onerror=null; this.style.display='none'; alert('Missing Image Target! Make sure file exists at: ' + '${currentImageUrl}');">
         </div>`;
     document.getElementById("scoreViewer").scrollIntoView({ behavior:"smooth" });
 }
