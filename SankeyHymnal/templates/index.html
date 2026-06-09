@@ -72,37 +72,63 @@
     }
 
     .dashboard-content.open {
-        max-height: 800px; 
+        max-height: 1200px; 
         margin-bottom: 25px;
     }
 
     .dashboard-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr;
         gap: 15px;
     }
 
     @media (max-width: 600px) {
-        .dashboard-grid { grid-template-columns: 1fr; }
         h1 { font-size: 32px; }
         body { padding: 15px; }
         body.drawer-open .container {
             transform: translateX(-280px);
             opacity: 0.2;
         }
+        .setlist-controls {
+            flex-direction: column !important;
+            align-items: stretch !important;
+        }
     }
 
     .dash-box {
         background: white;
-        padding: 20px;
+        padding: 24px;
         border-radius: 20px;
         box-shadow: 0 4px 15px rgba(0,0,0,.04);
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 16px;
         transition: background 0.3s;
     }
-    .dash-box h3 { margin: 0 0 5px 0; }
+    .dash-box h3 { margin: 0; }
+
+    .setlist-controls {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 16px;
+    }
+
+    .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+        min-width: 140px;
+    }
+
+    .control-group label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #666;
+    }
 
     .side-drawer {
         position: fixed;
@@ -164,20 +190,45 @@
     .audio-card audio{ width:100%; }
 
     /* Setlist Builder UI Components */
-    .setlist-pill-box { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+    .setlist-pill-box { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; min-height: 40px; align-items: center;}
     .setlist-pill { background: #e8e8ed; padding: 8px 14px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; color: black; }
     .setlist-pill:hover { background: #d1d1d6; }
     .setlist-pill .remove-btn { color: #ff3b30; font-weight: bold; cursor: pointer; margin-left: 4px; }
 
+    /* Saved Overview List Box */
+    .saved-setlists-panel {
+        background: #f5f5f7;
+        border-radius: 14px;
+        padding: 14px;
+        font-size: 14px;
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .saved-setlists-panel.open { display: flex; }
+    .saved-item-row {
+        display: flex;
+        justify-content: space-between;
+        background: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 1px solid transparent;
+    }
+    .saved-item-row:hover { border-color: #007aff; }
+
     /* Dark Mode styles */
     .dark-mode{ background:#111; color:white; }
-    .dark-mode .card, .dark-mode .dash-box, .dark-mode .side-drawer { background:#1c1c1e; color:white; }
+    .dark-mode .card, .dark-mode .dash-box, .dark-mode .side-drawer, .dark-mode .saved-item-row { background:#1c1c1e; color:white; }
     .dark-mode input, .dark-mode textarea, .dark-mode select { background:#2c2c2e; color:white; }
     .dark-mode button { background:white; color:black; }
-    .dark-mode .drawer-header, .dark-mode .term-item { border-color: #333; }
+    .dark-mode .drawer-header, .dark-mode .term-item, .dark-mode .setlist-controls { border-color: #333; }
+    .dark-mode .control-group label { color: #aaa; }
     .dark-mode .term-name { color: #fff; }
     .dark-mode .term-def { color: #aaa; }
-    .dark-mode .audio-card, .dark-mode .metronome-box { background:#2c2c2e; }
+    .dark-mode .audio-card, .dark-mode .metronome-box, .dark-mode .saved-setlists-panel { background:#2c2c2e; }
     
     .dark-mode #suggestions { background: #1c1c1e; box-shadow: 0 5px 20px rgba(0,0,0,.4); }
     .dark-mode .suggestion { color: white; border-bottom-color: #2c2c2e; }
@@ -264,22 +315,42 @@
 
     <div id="weeklyDashboard" class="dashboard-content">
         <div class="dashboard-grid">
-            <div class="dash-box" style="grid-column: 1 / -1;">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                    <h3>📋 Service Setlist Builder</h3>
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <span style="font-size:14px; font-weight:600;">Target Service Date:</span>
-                        <select id="setlistDateDropdown" onchange="loadSelectedDateSetlist()" style="padding:8px; border-radius:10px; font-size:14px; min-width:140px;"></select>
-                    </div>
-                </div>
-                
-                <div style="display:flex; gap:10px; margin-top:5px;">
-                    <input type="number" id="quickAddHymnNum" placeholder="Type Hymn # to stack..." style="padding:10px; border-radius:10px;">
-                    <button onclick="addHymnToActiveSetlist()">+ Add to List</button>
+            <div class="dash-box">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="display: flex; align-items: center; gap: 8px;">📋 Service Setlist Builder</h3>
+                    <button onclick="toggleSavedListOverview()" style="font-size: 13px; padding: 6px 12px; background: #8e8e93;">📋 View All Setlists</button>
                 </div>
 
+                <div class="setlist-controls">
+                    <div class="control-group" style="flex: 0.5; min-width: 90px;">
+                        <label for="setlistNumSelect">Setlist #</label>
+                        <select id="setlistNumSelect" onchange="loadActiveConfiguration()" style="padding:10px; border-radius:12px; font-size:15px;">
+                            <option value="1">Set 1</option>
+                            <option value="2">Set 2</option>
+                            <option value="3">Set 3</option>
+                            <option value="4">Set 4</option>
+                            <option value="5">Set 5</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group" style="flex: 1.5;">
+                        <label for="setlistDateDropdown">Target Service Date</label>
+                        <select id="setlistDateDropdown" onchange="loadActiveConfiguration()" style="padding:10px; border-radius:12px; font-size:15px;"></select>
+                    </div>
+
+                    <div class="control-group" style="flex: 1.2; flex-direction: row; align-items: flex-end; gap: 8px;">
+                        <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+                            <label for="quickAddHymnNum">Hymn #</label>
+                            <input type="number" id="quickAddHymnNum" placeholder="e.g. 23" style="padding:10px; border-radius:12px; font-size:15px;">
+                        </div>
+                        <button onclick="addHymnToActiveSetlist()" style="padding: 12px 14px; background: #007aff; height: 43px; display: flex; align-items: center;">+ Add</button>
+                    </div>
+                </div>
+
+                <div id="savedSetlistsOverview" class="saved-setlists-panel"></div>
+
                 <div class="setlist-pill-box" id="activeSetlistContainer"></div>
-                <p style="font-size:12px; color:#8e8e93; margin: 5px 0 0 0;">💡 Pro-Tip: Tap any stacked song number pill above to auto-load its sheet music scores instantly!</p>
+                <p style="font-size:12px; color:#8e8e93; margin: 0;">💡 Pro-Tip: Tap any stacked song number pill above to auto-load its sheet music scores instantly!</p>
             </div>
         </div>
     </div>
@@ -309,7 +380,6 @@ const glossaryTerms = [
     { name: "Fermata", def: "Hold or sustain the note indefinitely until cut off by the leader." }
 ];
 
-// Audio Setup
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let activeOctave = 4;
 const baseFrequencies = {
@@ -354,7 +424,6 @@ function toggleDrawer() {
     document.body.classList.toggle("drawer-open", drawer.classList.contains("open"));
 }
 
-// Metronome Engine
 let metroInterval = null;
 let isMetroRunning = false;
 let bpm = 100;
@@ -412,14 +481,14 @@ function populateGlossary(list) {
 }
 function filterGlossary(q) { populateGlossary(glossaryTerms.filter(t => t.name.toLowerCase().includes(q.toLowerCase()))); }
 
-/* --- ACTIVE PERSISTENT SETLIST LOGIC --- */
+
+/* --- SETLIST MANAGEMENT SYSTEM --- */
 let serverSetlistsGlobal = {};
 
 function generateDateOptions() {
     const dropdown = document.getElementById("setlistDateDropdown");
     dropdown.innerHTML = "";
     
-    // FIXED: Changed 'new datetime' to 'new Date()' to fix JS compilation failures
     const today = new Date();
     for (let i = -14; i <= 28; i++) {
         const d = new Date();
@@ -442,21 +511,28 @@ function generateDateOptions() {
     dropdown.value = today.toISOString().split('T')[0];
 }
 
+function getActiveStorageKey() {
+    const date = document.getElementById("setlistDateDropdown").value;
+    const setNum = document.getElementById("setlistNumSelect").value;
+    return `${date}::${setNum}`;
+}
+
 async function fetchAllSetlists() {
     try {
         const response = await fetch('/api/setlists');
         serverSetlistsGlobal = await response.json();
         renderActiveSetlistPills();
+        renderSavedOverviewList();
     } catch (err) { console.error("Error retrieving setlists:", err); }
 }
 
 function renderActiveSetlistPills() {
-    const selectedDate = document.getElementById("setlistDateDropdown").value;
-    const hymns = serverSetlistsGlobal[selectedDate] || [];
+    const compositeKey = getActiveStorageKey();
+    const hymns = serverSetlistsGlobal[compositeKey] || [];
     const container = document.getElementById("activeSetlistContainer");
     
     if (hymns.length === 0) {
-        container.innerHTML = "<div style='color:#8e8e93; padding:10px 0;'>No hymns added to this service date yet.</div>";
+        container.innerHTML = "<div style='color:#8e8e93; padding:4px 0;'>No hymns added to this setup configuration yet.</div>";
         return;
     }
     
@@ -471,20 +547,60 @@ function renderActiveSetlistPills() {
     container.innerHTML = html;
 }
 
-function loadSelectedDateSetlist() {
+function renderSavedOverviewList() {
+    const panel = document.getElementById("savedSetlistsOverview");
+    let html = "";
+    let count = 0;
+
+    for (const [key, hymns] of Object.entries(serverSetlistsGlobal)) {
+        if (hymns && hymns.length > 0) {
+            count++;
+            const parts = key.split("::");
+            const datePart = parts[0];
+            const setPart = parts[1] || "1";
+            
+            html += `
+            <div class="saved-item-row" onclick="selectSetlistFromOverview('${datePart}', '${setPart}')">
+                <strong>📅 ${datePart} (Set ${setPart})</strong>
+                <span>${hymns.length} Hymns: [ ${hymns.join(", ")} ]</span>
+            </div>`;
+        }
+    }
+    
+    if (count === 0) {
+        panel.innerHTML = "<div style='color:#8e8e93; text-align:center; padding:10px;'>No active saved setlists found anywhere.</div>";
+    } else {
+        panel.innerHTML = html;
+    }
+}
+
+function toggleSavedListOverview() {
+    const panel = document.getElementById("savedSetlistsOverview");
+    panel.classList.toggle("open");
+}
+
+function selectSetlistFromOverview(date, setNum) {
+    document.getElementById("setlistDateDropdown").value = date;
+    document.getElementById("setlistNumSelect").value = setNum;
+    renderActiveSetlistPills();
+    document.getElementById("savedSetlistsOverview").classList.remove("open");
+}
+
+function loadActiveConfiguration() {
     renderActiveSetlistPills();
 }
 
-const async_update_setlist = async (dateKey, hymnsArray) => {
+const async_update_setlist = async (compositeKey, hymnsArray) => {
     try {
         const response = await fetch('/api/setlists', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ date: dateKey, hymns: hymnsArray })
+            body: JSON.stringify({ date: compositeKey, hymns: hymnsArray })
         });
         const resData = await response.json();
         serverSetlistsGlobal = resData.data;
         renderActiveSetlistPills();
+        renderSavedOverviewList();
     } catch(err) { console.error("Error saving setlist instance:", err); }
 };
 
@@ -493,21 +609,21 @@ function addHymnToActiveSetlist() {
     const num = input.value.trim();
     if (!num) return;
     
-    const selectedDate = document.getElementById("setlistDateDropdown").value;
-    const currentHymns = serverSetlistsGlobal[selectedDate] || [];
+    const compositeKey = getActiveStorageKey();
+    const currentHymns = serverSetlistsGlobal[compositeKey] || [];
     
     if (!currentHymns.includes(num)) {
         currentHymns.push(num);
-        async_update_setlist(selectedDate, currentHymns);
+        async_update_setlist(compositeKey, currentHymns);
     }
     input.value = "";
 }
 
 function removeHymnFromSetlist(num) {
-    const selectedDate = document.getElementById("setlistDateDropdown").value;
-    let currentHymns = serverSetlistsGlobal[selectedDate] || [];
+    const compositeKey = getActiveStorageKey();
+    let currentHymns = serverSetlistsGlobal[compositeKey] || [];
     currentHymns = currentHymns.filter(item => item !== num);
-    async_update_setlist(selectedDate, currentHymns);
+    async_update_setlist(compositeKey, currentHymns);
 }
 
 window.onload = function(){
@@ -518,7 +634,8 @@ window.onload = function(){
     updateTimeSignature("4"); populateGlossary(glossaryTerms);
 };
 
-/* --- GOOGLE STYLE SEARCH ENGINE --- */
+
+/* --- FIXED ENGINE SEARCH & SCORE LOGIC --- */
 const searchBox = document.getElementById("searchBox");
 const suggestionsBox = document.getElementById("suggestions");
 let currentFocus = -1;
@@ -566,7 +683,7 @@ async function showSuggestions(){
 }
 
 function selectSuggestion(number, title) {
-    searchBox.value = `${number} - ${title}`;
+    searchBox.value = number; // Keep just the clean identifier for the input
     suggestionsBox.innerHTML = "";
     searchHymn(number);
 }
@@ -576,34 +693,41 @@ function addActive(items) {
     removeActive(items);
     currentFocus = (currentFocus + items.length) % items.length;
     items[currentFocus].classList.add("selected");
-    searchBox.value = items[currentFocus].innerText;
 }
 function removeActive(items) { for (let i = 0; i < items.length; i++) items[i].classList.remove("selected"); }
 
-function quickLoad(number) { searchBox.value = number; searchHymn(number); }
+function quickLoad(number) { 
+    searchBox.value = number; 
+    searchHymn(number); 
+}
 
 async function searchHymn(exactNumber = null){
     let query = searchBox.value.trim();
     if(!query) return;
     
-    if(exactNumber) {
-        query = exactNumber;
-    } else {
-        if(query.includes(" — ")) query = query.split(" — ")[0];
-        if(query.includes(" - ")) query = query.split(" - ")[0];
-    }
+    // Parse pure layout strings
+    if(query.includes(" — ")) query = query.split(" — ")[0];
+    if(query.includes(" - ")) query = query.split(" - ")[0];
+    if(exactNumber) query = exactNumber;
 
-    const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
-    const data = await response.json();
-    let html = "";
+    try {
+        const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        let html = "";
 
-    if(data.length === 0){
-        html = "<div class='card'>No hymns found.</div>";
-        searchResultsCache = [];
-    }else{
+        if(!data || data.length === 0){
+            html = "<div class='card'>No hymns found.</div>";
+            searchResultsCache = [];
+            document.getElementById("results").innerHTML = html;
+            document.getElementById("scoreViewer").innerHTML = "";
+            return;
+        }
+
+        // Filter cleanly if an exact numerical value was selected
         let finalData = data;
         if(exactNumber) {
             finalData = data.filter(hymn => String(hymn.number).trim() === String(exactNumber).trim());
+            if(finalData.length === 0) finalData = data; // fallback safety
         }
         
         searchResultsCache = finalData;
@@ -634,20 +758,23 @@ async function searchHymn(exactNumber = null){
                 ${audioHtml}
             </div>`;
         });
-    }
-    document.getElementById("results").innerHTML = html;
-    document.getElementById("scoreViewer").innerHTML = ""; 
-    
-    if(exactNumber && searchResultsCache.length > 0) {
-        showScoreFromCache(0);
+
+        document.getElementById("results").innerHTML = html;
+        
+        // AUTO-LOAD first score automatically when targeted explicitly
+        if(searchResultsCache.length > 0) {
+            showScoreFromCache(0);
+        }
+    } catch (e) {
+        console.error("Critical issue fetching search queries:", e);
     }
 }
 
-/* --- ADVANCED MULTI-PAGE ALIGNMENT LOADER --- */
 function showScoreFromCache(index) {
     const selectedHymn = searchResultsCache[index];
     if (!selectedHymn) return;
     
+    // Standard extraction
     activeHymnPages = selectedHymn.image_urls || selectedHymn.images || selectedHymn.pages;
     
     if (!activeHymnPages && selectedHymn.page) {
@@ -703,7 +830,7 @@ function renderPage(){
         <div class="card">
             <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
                 <button onclick="previousPage()" ${isFirst ? 'disabled' : ''}>← Previous Page</button>
-                <button disabled>Sheet Viewer (${currentImageIndex + 1} / ${activeHymnPages.length})</button>
+                <button disabled style="background:#007aff;">Sheet Viewer (${currentImageIndex + 1} / ${activeHymnPages.length})</button>
                 <button onclick="nextPage()" ${isLast ? 'disabled' : ''}>Next Page →</button>
             </div>
             <img src="${currentImageUrl}" alt="Hymn Sheet Music View" onerror="this.onerror=null; this.style.display='none'; alert('Missing Image Target! Make sure file exists at: ' + '${currentImageUrl}');">
