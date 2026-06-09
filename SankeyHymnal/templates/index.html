@@ -778,8 +778,6 @@ function showScoreFromCache(index) {
     if (!selectedHymn) return;
     
     activeHymnPages = [];
-
-    // Check database object keys safely
     let rawPages = selectedHymn.image_urls || selectedHymn.images || selectedHymn.pages || selectedHymn.image_path;
     
     if (rawPages) {
@@ -787,7 +785,6 @@ function showScoreFromCache(index) {
         else if (Array.isArray(rawPages)) activeHymnPages = rawPages;
     }
 
-    // Direct page range logic protection
     if (activeHymnPages.length === 0 && selectedHymn.page !== undefined && selectedHymn.page !== null) {
         const pageStr = String(selectedHymn.page).trim();
         if (pageStr.includes("-")) {
@@ -807,7 +804,6 @@ function showScoreFromCache(index) {
         }
     }
 
-    // Strict numerical ID backup asset resolution
     if (activeHymnPages.length === 0 && selectedHymn.number) {
         const cleanNum = String(selectedHymn.number).trim();
         activeHymnPages = [`/static/pages/Sankey_${cleanNum}.jpg`];
@@ -848,7 +844,6 @@ function handleImageError(imgObj, originalUrl) {
         }
     }
     imgObj.style.display = 'none';
-    alert(`Could not load score asset sheet view at destination path:\n${originalUrl}`);
 }
 
 function nextPage(){ if(currentImageIndex < activeHymnPages.length - 1){ currentImageIndex++; renderPage(); } }
