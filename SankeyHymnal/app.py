@@ -1,4 +1,5 @@
-import time
+import json
+import os
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, jsonify
 
@@ -6,34 +7,29 @@ app = Flask(__name__)
 
 # Global in-memory storage for setlists
 setlists_db = {}
+HYMNS_DATABASE = []
 
-# Mock Database Dataset matching frontend payload expectations
-HYMNS_DATABASE = [
-    {
-        "number": "1",
-        "title": "Ho, Every One That Thirsteth",
-        "page": "5",
-        "prev_hymn": None,
-        "next_hymn": "2",
-        "audio": {"Soprano": "hymn1_sop.mp3", "Alto": "hymn1_alt.mp3"}
-    },
-    {
-        "number": "2",
-        "title": "Grace Greater than Our Sin",
-        "page": "6",
-        "prev_hymn": "1",
-        "next_hymn": "3",
-        "audio": {"Full Mix": "hymn2_full.mp3"}
-    },
-    {
-        "number": "23",
-        "title": "The Lord's My Shepherd",
-        "page": "25",
-        "prev_hymn": "22",
-        "next_hymn": "24",
-        "audio": {"Tenor": "hymn23_ten.mp3", "Bass": "hymn23_bas.mp3"}
-    }
-]
+# --- LOAD YOUR ACTUAL HYMNS.JSON DATABASE ---
+def load_hymns_database():
+    global HYMNS_DATABASE
+    # Checks for 'hymns.json' in your main project folder
+    json_path = os.path.join(os.path.dirname(__file__), 'hymns.json')
+    
+    if os.path.exists(json_path):
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                HYMNS_DATABASE = json.load(f)
+                print(f" Successfully loaded {len(HYMNS_DATABASE)} hymns from hymns.json")
+        except Exception as e:
+            print(f"❌ Error reading hymns.json: {e}")
+            HYMNS_DATABASE = []
+    else:
+        print("⚠️ Warning: hymns.json not found in root directory! Please make sure it's uploaded next to app.py.")
+        HYMNS_DATABASE = []
+
+# Initialize the database on startup
+load_hymns_database()
+
 
 def cleanup_old_setlists():
     """Removes setlists that are older than 4 weeks (28 days)"""
@@ -43,7 +39,6 @@ def cleanup_old_setlists():
     to_delete = []
     for key_str in list(setlists_db.keys()):
         try:
-            # Handle standard composite formats gracefully
             date_part = key_str.split("::")[0]
             setlist_date = datetime.strptime(date_part, "%Y-%m-%d")
             if setlist_date < four_weeks_ago:
@@ -66,7 +61,6 @@ def home():
 def dashboard():
     return jsonify({
         "status": "healthy",
-        "message": "Welcome to the Sankey Hymnal Dashboard",
         "timestamp": datetime.utcnow().isoformat()
     }), 200
 
@@ -96,11 +90,13 @@ def search():
 
     matched_results = []
     for hymn in HYMNS_DATABASE:
-        # Match against number or against title text strings safely
-        if query == str(hymn["number"]).lower() or query in hymn["title"].lower():
+        hymn_num = str(hymn.get("number", "")).strip().lower()
+        hymn_title = str(hymn.get("title", "")).strip().lower()
+        
+        # Match exactly by number, or check if query is in the title string
+        if query == hymn_num or query in hymn_title:
             matched_results.append(hymn)
 
-    # Return raw array directly to match frontend parsing architecture expectations
     return jsonify(matched_results)
 
 if __name__ == '__main__':
