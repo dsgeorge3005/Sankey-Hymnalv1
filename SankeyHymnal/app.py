@@ -53,7 +53,7 @@ def search():
                 pages = [hymn.get("page", hymn["number"])]
 
             # -------------------------------------------------------------
-            # 🖼️ PRODUCTION-READY MULTI-FOLDER ROUTING ENGINE
+            # 🖼️ SANKEY SPECIFIC MULTI-FOLDER ROUTING ENGINE (.jpg)
             # -------------------------------------------------------------
             image_urls = []
             
@@ -63,36 +63,35 @@ def search():
                 except ValueError:
                     page_num_int = 0
 
-                # Strategy 1: Attempt to route using Calculated Page Number
-                if page_num_int > 0:
-                    folder_target = "pages" if page_num_int <= 1000 else "pages2"
-                    filename_target = f"{folder_target}/{page_num_int}.png"
-                    
-                    # Verify using relative deployment directory path mapping
-                    full_check_path = os.path.join(app.static_folder, filename_target)
-                    
-                    # Case-Insensitive Extension Check (.png vs .PNG)
-                    if not os.path.exists(full_check_path):
-                        alt_check_path = os.path.join(app.static_folder, f"{folder_target}/{page_num_int}.PNG")
-                        if os.path.exists(alt_check_path):
-                            filename_target = f"{folder_target}/{page_num_int}.PNG"
-                        else:
-                            # Strategy 2: If page file doesn't exist, fall back to Hymn Number routing
-                            try:
-                                hymn_num_int = int(hymn["number"])
-                            except ValueError:
-                                hymn_num_int = 0
-                            
-                            hymn_folder = "pages" if hymn_num_int <= 1000 else "pages2"
-                            filename_target = f"{hymn_folder}/{hymn['number']}.png"
-                            
-                            # Final double-check for uppercase .PNG on the hymn number fallback
-                            final_check = os.path.join(app.static_folder, filename_target)
-                            if not os.path.exists(final_check) and os.path.exists(os.path.join(app.static_folder, f"{hymn_folder}/{hymn['number']}.PNG")):
-                                filename_target = f"{hymn_folder}/{hymn['number']}.PNG"
+                # 1. Determine folder based on page number threshold
+                if page_num_int <= 1000:
+                    folder_target = "pages"
                 else:
-                    # Strategy 3: Complete safety baseline if data parsing fails entirely
-                    filename_target = f"pages/{hymn['number']}.png"
+                    folder_target = "pages2"
+
+                # 2. Build filename matching your exact format: Sankey_[number].jpg
+                filename_target = f"{folder_target}/Sankey_{page_num_int}.jpg"
+                full_check_path = os.path.join(app.static_folder, filename_target)
+                
+                # Case-Insensitive Extension Check fallback (.jpg vs .JPG)
+                if not os.path.exists(full_check_path):
+                    alt_check_path = os.path.join(app.static_folder, f"{folder_target}/Sankey_{page_num_int}.JPG")
+                    if os.path.exists(alt_check_path):
+                        filename_target = f"{folder_target}/Sankey_{page_num_int}.JPG"
+                    else:
+                        # 3. Fallback to Hymn Number if page calculation falls short
+                        try:
+                            hymn_num_int = int(hymn["number"])
+                        except ValueError:
+                            hymn_num_int = 0
+                        
+                        hymn_folder = "pages" if hymn_num_int <= 1000 else "pages2"
+                        filename_target = f"{hymn_folder}/Sankey_{hymn['number']}.jpg"
+                        
+                        # Check uppercase fallback for hymn number
+                        final_check = os.path.join(app.static_folder, filename_target)
+                        if not os.path.exists(final_check) and os.path.exists(os.path.join(app.static_folder, f"{hymn_folder}/Sankey_{hymn['number']}.JPG")):
+                            filename_target = f"{hymn_folder}/Sankey_{hymn['number']}.JPG"
 
                 img_url = url_for('static', filename=filename_target)
                 image_urls.append(img_url)
