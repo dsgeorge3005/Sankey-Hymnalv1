@@ -94,12 +94,23 @@
         .dashboard-grid { grid-template-columns: 1fr; }
         h1 { font-size: 32px; }
         body { padding: 15px; }
-        /* Prevent excessive cutoff on narrow mobile display structures */
         body.drawer-open .container {
             transform: translateX(-280px);
             opacity: 0.2;
         }
     }
+
+    .dash-box {
+        background: white;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,.04);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        transition: background 0.3s;
+    }
+    .dash-box h3 { margin: 0 0 5px 0; }
 
     /* --- SIDE MUSICAL DRAWER SYSTEM --- */
     .side-drawer {
@@ -129,7 +140,7 @@
         justify-content: space-between;
         align-items: center;
         border-bottom: 1px solid #eee;
-        padding-bottom: 15px; /* Added padding breathe room */
+        padding-bottom: 15px;
     }
 
     .drawer-header h2 { margin: 0; font-size: 22px; }
@@ -251,18 +262,6 @@
         box-shadow:0 10px 30px rgba(0,0,0,.08);
         transition: background 0.3s;
     }
-
-    .dash-box {
-        background: white;
-        padding: 20px;
-        border-radius: 20px;
-        box-shadow: 0 4px 15px rgba(0,0,0,.04);
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        transition: background 0.3s;
-    }
-    .dash-box h3 { margin: 0 0 5px 0; }
 
     .actions{
         margin-top:15px;
@@ -389,11 +388,11 @@
         <div class="dashboard-grid">
             <div class="dash-box">
                 <h3>📖 This Week's Hymns</h3>
-                <textarea id="weeklyNotes" placeholder="Type chosen songs here..."></textarea>
+                <textarea id="weeklyNotes" placeholder="Type chosen songs here..." oninput="saveNotes()"></textarea>
             </div>
             <div class="dash-box">
                 <h3>📅 Service Date Selector</h3>
-                <input type="date" id="calendarPicker">
+                <input type="date" id="calendarPicker" onchange="saveDate()">
             </div>
         </div>
     </div>
@@ -522,12 +521,9 @@ function shiftOctave(direction) {
     document.getElementById("octaveDisplay").innerText = "Octave: " + activeOctave;
 }
 
-// Controls shifting both the drawer UI layer and background score container
 function toggleDrawer() {
     const drawer = document.getElementById("musicalDrawer");
     drawer.classList.toggle("open");
-    
-    // Toggle the shifting helper class directly on the body tag
     if (drawer.classList.contains("open")) {
         document.body.classList.add("drawer-open");
     } else {
@@ -535,7 +531,7 @@ function toggleDrawer() {
     }
 }
 
-// Metronome Matrix Configuration Engine
+// Metronome Engine
 let metroInterval = null;
 let isMetroRunning = false;
 let bpm = 100;
@@ -630,13 +626,27 @@ function filterGlossary(query) {
     populateGlossary(filtered);
 }
 
+// Dedicated Save Function Engines
+function saveNotes() {
+    const textVal = document.getElementById("weeklyNotes").value;
+    localStorage.setItem("weeklyHymnsNotes", textVal);
+}
+
+function saveDate() {
+    const dateVal = document.getElementById("calendarPicker").value;
+    localStorage.setItem("weeklyHymnsDate", dateVal);
+}
+
 // Core App Init Lifecycle
 window.onload = function(){
     if(localStorage.getItem("theme") === "dark"){
         document.body.classList.add("dark-mode");
     }
+    
+    // Explicitly load values safely back from browser memory on startup
     document.getElementById("weeklyNotes").value = localStorage.getItem("weeklyHymnsNotes") || "";
     document.getElementById("calendarPicker").value = localStorage.getItem("weeklyHymnsDate") || "";
+    
     if(localStorage.getItem("dashboardOpen") === "true") {
         document.getElementById("weeklyDashboard").classList.add("open");
     }
@@ -652,13 +662,6 @@ let currentFocus = -1;
 let searchResultsCache = [];
 let activeHymnPages = [];
 let currentImageIndex = 0;
-
-document.getElementById("weeklyNotes").addEventListener("input", function() {
-    localStorage.setItem("weeklyHymnsNotes", this.value);
-});
-document.getElementById("calendarPicker").addEventListener("change", function() {
-    localStorage.setItem("weeklyHymnsDate", this.value);
-});
 
 function toggleDashboard() {
     const dash = document.getElementById("weeklyDashboard");
