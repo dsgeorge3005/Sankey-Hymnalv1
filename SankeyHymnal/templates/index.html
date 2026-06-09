@@ -15,17 +15,15 @@
         overflow-x: hidden;
     }
 
-    /* Base layout container wrapper with transition engine */
     .container{
         max-width:900px;
         margin:auto;
         transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
     }
 
-    /* Smoothly pushes the score and page layout leftward when music drawer is active */
     body.drawer-open .container {
         transform: translateX(-180px);
-        opacity: 0.6; /* Slightly dims background to pull visual focus to tools */
+        opacity: 0.6;
     }
 
     h1{
@@ -71,7 +69,6 @@
         opacity:.9;
     }
 
-    /* Weekly Dashboard Styling */
     .dashboard-content {
         max-height: 0;
         overflow: hidden;
@@ -112,7 +109,6 @@
     }
     .dash-box h3 { margin: 0 0 5px 0; }
 
-    /* --- SIDE MUSICAL DRAWER SYSTEM --- */
     .side-drawer {
         position: fixed;
         top: 0;
@@ -131,157 +127,38 @@
         box-sizing: border-box;
     }
 
-    .side-drawer.open {
-        right: 0;
-    }
-
-    .drawer-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 15px;
-    }
-
+    .side-drawer.open { right: 0; }
+    .drawer-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; }
     .drawer-header h2 { margin: 0; font-size: 22px; }
 
-    /* Keyboard Section */
-    .keyboard-container {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    .piano-controls {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .piano {
-        display: flex;
-        position: relative;
-        height: 120px;
-        background: #000;
-        padding: 2px;
-        border-radius: 8px;
-        user-select: none;
-    }
-    .white-key {
-        flex: 1;
-        background: white;
-        border: 1px solid #ccc;
-        border-radius: 0 0 4px 4px;
-        cursor: pointer;
-        z-index: 1;
-    }
+    .keyboard-container { display: flex; flex-direction: column; gap: 10px; }
+    .piano-controls { display: flex; justify-content: space-between; align-items: center; }
+    .piano { display: flex; position: relative; height: 120px; background: #000; padding: 2px; border-radius: 8px; user-select: none; }
+    .white-key { flex: 1; background: white; border: 1px solid #ccc; border-radius: 0 0 4px 4px; cursor: pointer; z-index: 1; }
     .white-key:active { background: #e5e5e5; }
-    .black-key {
-        position: absolute;
-        width: 6%;
-        height: 60%;
-        background: black;
-        border-radius: 0 0 3px 3px;
-        cursor: pointer;
-        z-index: 2;
-        transform: translateX(-50%);
-    }
+    .black-key { position: absolute; width: 6%; height: 60%; background: black; border-radius: 0 0 3px 3px; cursor: pointer; z-index: 2; transform: translateX(-50%); }
     .black-key:active { background: #333; }
 
-    /* Metronome Section */
-    .metronome-box {
-        background: #f5f5f7;
-        padding: 15px;
-        border-radius: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    .metro-display {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-weight: bold;
-    }
-    .metro-visuals {
-        display: flex;
-        justify-content: center;
-        gap: 6px;
-        margin: 5px 0;
-        flex-wrap: wrap;
-    }
-    .metro-dot {
-        width: 10px;
-        height: 10px;
-        background: #ccc;
-        border-radius: 50%;
-        transition: background 0.08s, transform 0.08s;
-    }
+    .metronome-box { background: #f5f5f7; padding: 15px; border-radius: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .metro-display { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+    .metro-visuals { display: flex; justify-content: center; gap: 6px; margin: 5px 0; flex-wrap: wrap; }
+    .metro-dot { width: 10px; height: 10px; background: #ccc; border-radius: 50%; transition: background 0.08s, transform 0.08s; }
     .metro-dot.active { background: #ff3b30; transform: scale(1.3); }
 
-    /* Glossary Section */
-    .glossary-box {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        max-height: 240px;
-        overflow-y: auto;
-        padding-right: 5px;
-    }
-    .term-item {
-        border-bottom: 1px solid #eee;
-        padding: 8px 0;
-    }
+    .glossary-box { display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto; padding-right: 5px; }
+    .term-item { border-bottom: 1px solid #eee; padding: 8px 0; }
     .term-name { font-weight: 600; color: #111; }
     .term-def { font-size: 14px; color: #666; margin-top: 2px; }
 
-    /* Base App Search Components */
-    #suggestions{
-        background:white;
-        border-radius:16px;
-        margin-top:10px;
-        overflow:hidden;
-        box-shadow:0 5px 20px rgba(0,0,0,.08);
-        max-height: 250px;
-        overflow-y: auto;
-    }
-
-    .suggestion{
-        padding:14px 18px;
-        cursor:pointer;
-        border-bottom:1px solid #eee;
-        transition: background 0.15s ease;
-    }
-
+    #suggestions{ background:white; border-radius:16px; margin-top:10px; overflow:hidden; box-shadow:0 5px 20px rgba(0,0,0,.08); max-height: 250px; overflow-y: auto; }
+    .suggestion{ padding:14px 18px; cursor:pointer; border-bottom:1px solid #eee; transition: background 0.15s ease; }
     .suggestion:hover{ background:#f5f5f7; }
     .suggestion.selected { background: #e8e8ed; }
 
-    .card{
-        background:white;
-        margin-top:20px;
-        padding:20px;
-        border-radius:24px;
-        box-shadow:0 10px 30px rgba(0,0,0,.08);
-        transition: background 0.3s;
-    }
-
-    .actions{
-        margin-top:15px;
-        display:flex;
-        gap:10px;
-        flex-wrap:wrap;
-    }
-
-    .actions button, .actions a {
-        flex: 1;
-        min-width: 120px;
-    }
-
-    img{
-        width:100%;
-        height: auto;
-        border-radius:16px;
-        margin-top:15px;
-    }
-
+    .card{ background:white; margin-top:20px; padding:20px; border-radius:24px; box-shadow:0 10px 30px rgba(0,0,0,.08); transition: background 0.3s; }
+    .actions{ margin-top:15px; display:flex; gap:10px; flex-wrap:wrap; }
+    .actions button, .actions a { flex: 1; min-width: 120px; }
+    img{ width:100%; height: auto; border-radius:16px; margin-top:15px; }
     a{ text-decoration:none; display: inline-block; }
     #scoreViewer{ margin-top:20px; }
     .audio-section{ margin-top:20px; }
@@ -291,20 +168,14 @@
     .voice-part{ font-weight:600; font-size:16px; margin-bottom:10px; }
     .audio-card audio{ width:100%; }
 
-    /* Dark Mode Styling Layers */
     .dark-mode{ background:#111; color:white; }
     .dark-mode .card, .dark-mode .dash-box, .dark-mode .side-drawer { background:#1c1c1e; color:white; }
     .dark-mode input, .dark-mode textarea, .dark-mode select { background:#2c2c2e; color:white; }
-    .dark-mode .dashboard-toggle { background: #2c2c2e; color: white; }
-    .dark-mode #suggestions{ background:#1c1c1e; }
-    .dark-mode .suggestion{ border-color:#333; }
-    .dark-mode .suggestion:hover{ background:#2c2c2e; }
-    .dark-mode .suggestion.selected { background: #3a3a3c; }
-    .dark-mode .audio-card, .dark-mode .metronome-box { background:#2c2c2e; }
     .dark-mode button { background:white; color:black; }
     .dark-mode .drawer-header, .dark-mode .term-item { border-color: #333; }
     .dark-mode .term-name { color: #fff; }
     .dark-mode .term-def { color: #aaa; }
+    .dark-mode .audio-card, .dark-mode .metronome-box { background:#2c2c2e; }
     </style>
 </head>
 
@@ -362,16 +233,14 @@
             </select>
         </div>
 
-        <div class="metro-visuals" id="metroVisualsContainer">
-            </div>
+        <div class="metro-visuals" id="metroVisualsContainer"></div>
         <button id="metroBtn" onclick="toggleMetronome()" style="width:100%;">▶ Start</button>
     </div>
 
     <div>
         <h3 style="margin-top:0; margin-bottom:10px;">📚 Reference Dictionary</h3>
-        <input type="text" id="glossarySearch" placeholder="Search terms (e.g., crotchet, adagio)..." oninput="filterGlossary(this.value)" style="width:100%; padding:10px; font-size:14px; border-radius:10px; margin-bottom:10px; box-sizing: border-box;">
-        <div class="glossary-box" id="glossaryList">
-            </div>
+        <input type="text" id="glossarySearch" placeholder="Search terms..." oninput="filterGlossary(this.value)" style="width:100%; padding:10px; font-size:14px; border-radius:10px; margin-bottom:10px; box-sizing: border-box;">
+        <div class="glossary-box" id="glossaryList"></div>
     </div>
 </div>
 
@@ -388,11 +257,11 @@
         <div class="dashboard-grid">
             <div class="dash-box">
                 <h3>📖 This Week's Hymns</h3>
-                <textarea id="weeklyNotes" placeholder="Type chosen songs here..." oninput="saveNotes()"></textarea>
+                <textarea id="weeklyNotes" placeholder="Type chosen songs here..." oninput="syncNotesToServer()"></textarea>
             </div>
             <div class="dash-box">
                 <h3>📅 Service Date Selector</h3>
-                <input type="date" id="calendarPicker" onchange="saveDate()">
+                <input type="date" id="calendarPicker" onchange="syncDateToServer()">
             </div>
         </div>
     </div>
@@ -463,7 +332,7 @@ const glossaryTerms = [
     { name: "Coda", def: "An expanded closing section or custom musical outro layout." }
 ];
 
-// Audio Setup
+// Audio Configuration
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let activeOctave = 4;
 const baseFrequencies = {
@@ -471,7 +340,6 @@ const baseFrequencies = {
     'F': 21.83, 'F#': 23.12, 'G': 24.50, 'G#': 25.96, 'A': 27.50, 'A#': 29.14, 'B': 30.87, 'C2': 32.70
 };
 
-// Acoustic Piano FM Synth Engine
 function playTone(note) {
     let fundamental = baseFrequencies[note] * Math.pow(2, activeOctave);
     let now = audioCtx.currentTime;
@@ -531,7 +399,7 @@ function toggleDrawer() {
     }
 }
 
-// Metronome Engine
+// Metronome Logic
 let metroInterval = null;
 let isMetroRunning = false;
 let bpm = 100;
@@ -572,7 +440,6 @@ function startMetronome() {
     isMetroRunning = true;
     document.getElementById("metroBtn").innerText = "⏹ Stop";
     document.getElementById("metroBtn").style.background = "#ff3b30";
-    
     const intervalMs = ((60 / bpm) * 1000) * timingFactor;
     
     metroInterval = setInterval(() => {
@@ -580,13 +447,11 @@ function startMetronome() {
             let d = document.getElementById(`dotM${i}`);
             if(d) d.classList.remove('active');
         }
-        
         let targetDot = document.getElementById(`dotM${currentBeat}`);
         if(targetDot) targetDot.classList.add('active');
         
         let osc = audioCtx.createOscillator();
         let gainNode = audioCtx.createGain();
-        
         osc.frequency.setValueAtTime(currentBeat === 0 ? 1150 : 680, audioCtx.currentTime); 
         gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
         gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
@@ -594,7 +459,6 @@ function startMetronome() {
         gainNode.connect(audioCtx.destination);
         osc.start();
         osc.stop(audioCtx.currentTime + 0.06);
-        
         currentBeat = (currentBeat + 1) % beatsPerMeasure;
     }, intervalMs);
 }
@@ -626,26 +490,54 @@ function filterGlossary(query) {
     populateGlossary(filtered);
 }
 
-// Dedicated Save Function Engines
-function saveNotes() {
-    const textVal = document.getElementById("weeklyNotes").value;
-    localStorage.setItem("weeklyHymnsNotes", textVal);
+/* --- SERVER CROSS-DEVICE SYNC ENGINE --- */
+let debounceTimer;
+
+async function loadDashboardFromServer() {
+    try {
+        const response = await fetch('/api/dashboard');
+        const data = await response.json();
+        document.getElementById("weeklyNotes").value = data.notes || "";
+        document.getElementById("calendarPicker").value = data.date || "";
+    } catch (err) {
+        console.error("Could not fetch server dashboard info:", err);
+    }
 }
 
-function saveDate() {
+function syncNotesToServer() {
+    // Debounce saves to avoid spamming network requests with every individual keystroke
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(async () => {
+        const notesVal = document.getElementById("weeklyNotes").value;
+        try {
+            await fetch('/api/dashboard', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: json.stringify({ notes: notesVal })
+            });
+        } catch(err) { console.error("Notes sync failed:", err); }
+    }, 400); // Wait until user stops typing for 400ms
+}
+
+async function syncDateToServer() {
     const dateVal = document.getElementById("calendarPicker").value;
-    localStorage.setItem("weeklyHymnsDate", dateVal);
+    try {
+        await fetch('/api/dashboard', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: json.stringify({ date: dateVal })
+        });
+    } catch(err) { console.error("Calendar sync failed:", err); }
 }
 
-// Core App Init Lifecycle
+// Core App Initialization Framework
 window.onload = function(){
     if(localStorage.getItem("theme") === "dark"){
         document.body.classList.add("dark-mode");
     }
     
-    // Explicitly load values safely back from browser memory on startup
-    document.getElementById("weeklyNotes").value = localStorage.getItem("weeklyHymnsNotes") || "";
-    document.getElementById("calendarPicker").value = localStorage.getItem("weeklyHymnsDate") || "";
+    // Load fresh data directly from the main cloud server instead of browser cache memory
+    loadDashboardFromServer();
     
     if(localStorage.getItem("dashboardOpen") === "true") {
         document.getElementById("weeklyDashboard").classList.add("open");
@@ -658,7 +550,6 @@ window.onload = function(){
 const searchBox = document.getElementById("searchBox");
 const suggestionsBox = document.getElementById("suggestions");
 let currentFocus = -1;
-
 let searchResultsCache = [];
 let activeHymnPages = [];
 let currentImageIndex = 0;
@@ -667,6 +558,8 @@ function toggleDashboard() {
     const dash = document.getElementById("weeklyDashboard");
     dash.classList.toggle("open");
     localStorage.setItem("dashboardOpen", dash.classList.contains("open"));
+    // Refresh content whenever dashboard layout unfolds
+    if(dash.classList.contains("open")) { loadDashboardFromServer(); }
 }
 
 function toggleTheme(){
@@ -745,7 +638,6 @@ async function searchHymn(){
     const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
     const data = await response.json();
     let html = "";
-
     searchResultsCache = data;
 
     if(data.length === 0){
@@ -794,7 +686,6 @@ function showScoreFromCache(index) {
 
 function renderPage(){
     if(!activeHymnPages || activeHymnPages.length === 0) return;
-    
     const currentImageUrl = activeHymnPages[currentImageIndex];
     const isFirst = currentImageIndex === 0;
     const isLast = currentImageIndex === activeHymnPages.length - 1;
@@ -811,19 +702,8 @@ function renderPage(){
     document.getElementById("scoreViewer").scrollIntoView({ behavior:"smooth" });
 }
 
-function nextPage(){ 
-    if(currentImageIndex < activeHymnPages.length - 1){ 
-        currentImageIndex++; 
-        renderPage(); 
-    } 
-}
-
-function previousPage(){ 
-    if(currentImageIndex > 0){ 
-        currentImageIndex--; 
-        renderPage(); 
-    } 
-}
+function nextPage(){ if(currentImageIndex < activeHymnPages.length - 1){ currentImageIndex++; renderPage(); } }
+function previousPage(){ if(currentImageIndex > 0){ currentImageIndex--; renderPage(); } }
 </script>
 </body>
 </html>
