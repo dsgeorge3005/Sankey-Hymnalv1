@@ -1,100 +1,48 @@
-import os
-import json
-from flask import Flask, render_template, request, jsonify, send_from_directory
+import time
+from datetime import datetime, timedelta
+from flask import Flask, render_code, request, jsonify
 
-app = Flask(__name__)
+# ... (keep your existing Flask setup and hymn search code up here) ...
 
-# Core Application File Mappings
-DATA_FILE = 'dashboard_data.json'
-HYMNS_JSON_FILE = 'hymns.json'
-AUDIO_FOLDER = 'audio'
+# Global in-memory storage for setlists (or replace with your DB logic)
+# Structure: { "2026-06-09": ["1", "5", "11"], "2026-06-16": ["2", "10"] }
+setlists_db = {}
 
-def load_hymns_database():
-    """Loads the main hymn book database from hymns.json"""
-    if os.path.exists(HYMNS_JSON_FILE):
-        try:
-            with open(HYMNS_JSON_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except Exception as e:
-            print(f"Error reading hymn database JSON: {e}")
-    else:
-        print(f"CRITICAL WARNING: '{HYMNS_JSON_FILE}' could not be located on the server!")
-    return []
-
-def load_dashboard_data():
-    """Safely reads the shared notes and calendar date from the server disk."""
-    if os.path.exists(DATA_FILE):
-        try:
-            with open(DATA_FILE, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                if isinstance(data, dict):
-                    return {
-                        "notes": data.get("notes", ""),
-                        "date": data.get("date", "")
-                    }
-        except Exception as e:
-            print(f"Error reading dashboard JSON file: {e}")
-    return {"notes": "", "date": ""}
-
-def save_dashboard_data(data):
-    """Saves the dashboard state securely to the server disk."""
-    try:
-        with open(DATA_FILE, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
-    except Exception as e:
-        print(f"Error writing dashboard JSON file: {e}")
-
-@app.route('/')
-def index():
-    """Renders the main app home page."""
-    return render_template('index.html')
-
-@app.route('/api/dashboard', methods=['GET'])
-def get_dashboard():
-    """Returns the globally saved notes and service calendar date to any device checking in."""
-    return jsonify(load_dashboard_data())
-
-@app.route('/api/dashboard', methods=['POST'])
-def update_dashboard():
-    """
-    Receives updates from a device and saves them globally.
-    Protects against data deletion by checking if fields are explicitly provided.
-    """
-    req_data = request.get_json() or {}
-    current_data = load_dashboard_data()
+def cleanup_old_setlists():
+    """Removes setlists that are older than 4 weeks (28 days)"""
+    now = datetime.now()
+    four_weeks_ago = now - timedelta(days=28)
     
-    if 'notes' in req_data and req_data['notes'] is not None:
-        current_data['notes'] = req_data['notes']
-        
-    if 'date' in req_data and req_data['date'] is not None:
-        current_data['date'] = req_data['date']
-        
-    save_dashboard_data(current_data)
-    return jsonify({"status": "success", "data": current_data})
-
-@app.route('/search')
-def search():
-    """Searches the database for hymn numbers or titles matching the query string"""
-    query = request.args.get('q', '').strip().lower()
-    hymns = load_hymns_database()
-    results = []
-    
-    if not query:
-        return jsonify([])
-        
-    for hymn in hymns:
-        hymn_num = str(hymn.get('number', '')).lower()
-        hymn_title = str(hymn.get('title', '')).lower()
-        
-        if query in hymn_num or query in hymn_title:
-            results.append(hymn)
+    # Track keys to delete
+    to_delete = []
+    for date_str in setlists_db.keys():
+        try:
+            setlist_date = datetime.strptime(date_str, "%Y-%m-%d")
+            if setlist_date < four_weeks_ago:
+                to_delete.append(date_str)
+        except ValueError:
+            # Delete invalid date strings to preserve space
+            to_delete.append(date_str)
             
-    return jsonify(results)
+    for old_key in to_delete:
+        del setlists_db[old_key]
 
-@app.route('/audio/<path:filename>')
-def serve_audio(filename):
-    """Serves the vocal part rehearsal tracks safely from the audio folder"""
-    return send_from_directory(AUDIO_FOLDER, filename)
+@app.route('/api/setlists', codecs=['GET'])
+def get_setlists():
+    cleanup_old_setlists() # Run housekeeping space preservation
+    return jsonify(setlists_db)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+@app.route('/api/setlists', codecs=['POST'])
+def save_setlist():
+    data = request.get_json() or {}
+    date_key = data.get('date')       # e.g., "2026-06-09"
+    hymns_list = data.get('hymns', []) # e.g., ["1", "5", "11"]
+    
+    if not date_key:
+        return jsonify({"error": "Missing date key"}), 400
+        
+    # Save/Update the setlist for this specific date
+    setlists_db[date_key] = [str(num).strip() for num in hymns_list if str(num).strip()]
+    
+    cleanup_old_setlists() # Keep space preserved
+    return jsonify({"success": True, "data": setlists_db})
