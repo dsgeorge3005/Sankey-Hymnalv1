@@ -64,6 +64,13 @@
         opacity:.9;
     }
 
+    button:disabled {
+        background: #ccc !important;
+        color: #8e8e93 !important;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
     .dashboard-content {
         max-height: 0;
         overflow: hidden;
@@ -217,11 +224,12 @@
     }
     .saved-item-row:hover { border-color: #007aff; }
 
-    /* Dark Mode styles */
+    /* Dark Mode styles override */
     .dark-mode{ background:#111; color:white; }
     .dark-mode .card, .dark-mode .dash-box, .dark-mode .side-drawer, .dark-mode .saved-item-row { background:#1c1c1e; color:white; }
     .dark-mode input, .dark-mode textarea, .dark-mode select { background:#2c2c2e; color:white; }
     .dark-mode button { background:white; color:black; }
+    .dark-mode button:disabled { background: #444 !important; color: #777 !important; }
     .dark-mode .drawer-header, .dark-mode .term-item, .dark-mode .setlist-controls { border-color: #333; }
     .dark-mode .control-group label { color: #aaa; }
     .dark-mode .term-name { color: #fff; }
@@ -311,7 +319,6 @@
         </div>
     </div>
 
-    <!-- SETLIST MANAGER PANEL -->
     <div id="weeklyDashboard" class="dashboard-content">
         <div class="dashboard-grid">
             <div class="dash-box">
@@ -740,12 +747,16 @@ async function searchHymn(exactNumber = null){
         finalData.forEach((hymn, index) => {
             const yt = "https://www.youtube.com/results?search_query=" + encodeURIComponent(hymn.title + " hymn");
             let audioHtml = "";
+            
+            // Safeguard loop against tracks missing audio blocks entirely
             if(hymn.audio && Object.keys(hymn.audio).length){
-                audioHtml = `<div class="audio-section"><h3>🎵 Recordings</h3><div class="audio-grid">`;
+                audioHtml = `<div class="audio-section"> h3>🎵 Recordings</h3><div class="audio-grid">`;
                 for(const [part,file] of Object.entries(hymn.audio)){
-                    audioHtml += `<div class="audio-card"><div class="voice-part">${part}</div><audio controls><source src="/audio/${file}" type="audio/mpeg"></audio></div>`;
+                    audioHtml += `<div class="audio-card"><div class="voice-part">${part}</div><audio controls preload="none"><source src="/audio/${file}" type="audio/mpeg"></audio></div>`;
                 }
                 audioHtml += `</div></div>`;
+            } else {
+                audioHtml = `<div class="audio-section" style="opacity: 0.5;"><p>ℹ️ No split audio learning tracks configured for this selection.</p></div>`;
             }
 
             html += `
@@ -775,87 +786,55 @@ async function searchHymn(exactNumber = null){
 }
 
 function showScoreFromCache(index) {
-    const selectedHymn = searchResultsCache[index];
-    if (!selectedHymn) return;
+    let hymn = searchResultsCache[index];
+    if(!hymn) return;
     
     activeHymnPages = [];
     
-    // 1. Check for explicit file structural properties in your hymns.json
-    let rawPages = selectedHymn.image_path || selectedHymn.image_urls || selectedHymn.images || selectedHymn.pages;
-    
-    if (rawPages) {
-        if (typeof rawPages === 'string') {
-            activeHymnPages = [rawPages];
-        } else if (Array.isArray(rawPages)) {
-            activeHymnPages = rawPages;
+    if (String(hymn.page).includes("-")) {
+        let ranges = String(hymn.page).split("-");
+        let start = parseInt(ranges[0], 10);
+        let end = parseInt(ranges[1], 10);
+        for(let p = start; p <= end; p++) {
+            let targetFolder = (p > 1000) ? "pages2" : "pages";
+            activeHymnPages.push(`/static/${targetFolder}/Sankey_${p}.jpg`);
         }
-    }
-
-    // 2. Alignment fix: Parse numeric pages if no direct image property was provided
-    if (activeHymnPages.length === 0 && selectedHymn.page !== undefined && selectedHymn.page !== null) {
-        const pageStr = String(selectedHymn.page).trim();
-        if (pageStr.includes("-")) {
-            const parts = pageStr.split("-");
-            const startPage = parseInt(parts[0], 10);
-            const endPage = parseInt(parts[1], 10);
-            if (!isNaN(startPage) && !isNaN(endPage)) {
-                for (let p = startPage; p <= endPage; p++) {
-                    activeHymnPages.push(`/static/pages/Sankey_${p}.jpg`);
-                }
-            }
-        } else {
-            const singlePage = parseInt(pageStr, 10);
-            if (!isNaN(singlePage)) {
-                activeHymnPages.push(`/static/pages/Sankey_${singlePage}.jpg`);
-            }
-        }
-    }
-
-    // 3. Fall back directly to hymn number index naming if pages aren't defined
-    if (activeHymnPages.length === 0 && selectedHymn.number) {
-        const cleanNum = String(selectedHymn.number).trim();
-        activeHymnPages = [`/static/pages/Sankey_${cleanNum}.jpg`];
+    } else {
+        let pageVal = parseInt(hymn.page, 10);
+        let targetFolder = (pageVal > 1000) ? "pages2" : "pages";
+        activeHymnPages.push(`/static/${targetFolder}/Sankey_${pageVal}.jpg`);
     }
 
     currentImageIndex = 0;
     renderPage();
 }
 
-function renderPage(){
-    if(!activeHymnPages || activeHymnPages.length === 0) {
-        document.getElementById("scoreViewer").innerHTML = "";
+function renderPage() {
+    let container = document.getElementById("scoreViewer");
+    if(!activeHymnPages.length) { container.innerHTML = ""; return; }
+    
+    container.innerHTML = `
+        <div class="card" style="text-align:center;">
+            <div style="display:flex; justify-content:center; gap:10px; margin-bottom:15px;">
+                <button onclick="previousPage()" ${currentImageIndex === 0 ? 'disabled' : ''}>← Previous</button>
+                <button disabled style="background:transparent; color:inherit; opacity:1 !important; border:1px solid #ccc;">Page (${currentImageIndex + 1}/${activeHymnPages.length})</button>
+                <button onclick="nextPage()" ${currentImageIndex === activeHymnPages.length - 1 ? 'disabled' : ''}>Next →</button>
+            </div>
+            <img src="${activeHymnPages[currentImageIndex]}" onerror="handleImageError(this, '${activeHymnPages[currentImageIndex]}')">
+        </div>`;
+}
+
+function handleImageError(img, url) {
+    if (!img.getAttribute('data-retry') && url.endsWith('.jpg')) {
+        img.setAttribute('data-retry', '1');
+        img.src = url.replace('.jpg', '.png');
         return;
     }
-    
-    const currentImageUrl = activeHymnPages[currentImageIndex];
-    const isFirst = currentImageIndex === 0;
-    const isLast = currentImageIndex === activeHymnPages.length - 1;
-
-    document.getElementById("scoreViewer").innerHTML = `
-        <div class="card">
-            <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
-                <button onclick="previousPage()" ${isFirst ? 'disabled' : ''}>← Previous Page</button>
-                <button disabled style="background:#007aff; opacity: 1; color: white;">Sheet Viewer (${currentImageIndex + 1} / ${activeHymnPages.length})</button>
-                <button onclick="nextPage()" ${isLast ? 'disabled' : ''}>Next Page →</button>
-            </div>
-            <img src="${currentImageUrl}" alt="Hymn Sheet Music View" onerror="handleImageError(this, '${currentImageUrl}')">
-        </div>`;
-    document.getElementById("scoreViewer").scrollIntoView({ behavior:"smooth" });
+    img.style.display = 'none';
 }
 
-function handleImageError(imgObj, originalUrl) {
-    if (!imgObj.getAttribute('data-retry')) {
-        imgObj.setAttribute('data-retry', '1');
-        if (originalUrl.endsWith('.jpg')) {
-            imgObj.src = originalUrl.replace('.jpg', '.png');
-            return;
-        }
-    }
-    imgObj.style.display = 'none';
-}
-
-function nextPage(){ if(currentImageIndex < activeHymnPages.length - 1){ currentImageIndex++; renderPage(); } }
-function previousPage(){ if(currentImageIndex > 0){ currentImageIndex--; renderPage(); } }
+function nextPage() { if(currentImageIndex < activeHymnPages.length - 1) { currentImageIndex++; renderPage(); } }
+function previousPage() { if(currentImageIndex > 0) { currentImageIndex--; renderPage(); } }
 </script>
 </body>
 </html>
