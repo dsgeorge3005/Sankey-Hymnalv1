@@ -1,139 +1,121 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sankey Hymnal — Obsidian Glass Edition</title>
+    <title>Sankey Hymnal</title>
 
     <style>
-    :root {
-        --glass-bg: rgba(20, 20, 25, 0.75);
-        --glass-border: rgba(255, 255, 255, 0.06);
-        --glass-shadow: rgba(0, 0, 0, 0.65);
-        --text-color: #f5f5f7;
-        --accent-color: #00e676;
-        --accent-glow: rgba(0, 230, 118, 0.25);
-        --bg-gradient: radial-gradient(circle at 50% 0%, #1c1c24 0%, #0c0c10 100%);
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
-        background: var(--bg-gradient);
-        background-attachment: fixed;
-        color: var(--text-color);
-        margin: 0;
-        padding: 20px;
-        min-height: 100vh;
+    body{
+        font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;
+        background:#f5f5f7;
+        margin:0;
+        padding:20px;
+        transition: background 0.3s, color 0.3s;
+        position: relative;
         overflow-x: hidden;
     }
 
-    .glass-panel {
-        background: var(--glass-bg);
-        backdrop-filter: blur(30px) saturate(150%);
-        -webkit-backdrop-filter: blur(30px) saturate(150%);
-        border: 1px solid var(--glass-border);
-        border-radius: 20px;
-        box-shadow: 0 12px 40px 0 var(--glass-shadow);
-        padding: 24px;
+    .container{
+        max-width:900px;
+        margin:auto;
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
     }
 
-    .container {
-        max-width: 900px;
-        margin: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
+    body.drawer-open .container {
+        transform: translateX(-180px);
+        opacity: 0.6;
     }
 
-    h1 {
-        text-align: center;
-        font-size: 36px;
-        font-weight: 800;
-        letter-spacing: -0.5px;
-        margin: 10px 0;
-        background: linear-gradient(180deg, #ffffff 0%, #a1a1aa 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    h1{
+        text-align:center;
+        font-size:36px;
+        margin-bottom:20px;
     }
 
-    .search-bar {
-        display: flex;
-        gap: 12px;
+    .search-bar{
+        display:flex;
+        gap:10px;
     }
 
-    input, select {
-        flex: 1;
-        padding: 16px 20px;
-        border: 1px solid var(--glass-border);
-        border-radius: 14px;
-        font-size: 16px;
-        background: rgba(255, 255, 255, 0.04);
-        color: var(--text-color);
-        outline: none;
-        transition: all 0.2s ease;
+    input, textarea, select{
+        flex:1;
+        padding:14px;
+        border:none;
+        border-radius:16px;
+        font-size:16px;
+        box-shadow:0 2px 10px rgba(0,0,0,.08);
+        font-family: inherit;
+        min-width: 0;
     }
 
-    input:focus, select:focus {
-        border-color: var(--accent-color);
-        box-shadow: 0 0 0 4px var(--accent-glow);
+    button{
+        background:black;
+        color:white;
+        border:none;
+        padding:12px 20px;
+        border-radius:12px;
+        cursor:pointer;
+        font-size:16px;
+        transition: background 0.2s, color 0.2s;
+        white-space: nowrap;
     }
 
-    button, .btn-link {
-        background: rgba(255, 255, 255, 0.08);
-        color: #fff;
-        border: 1px solid var(--glass-border);
-        padding: 14px 24px;
-        border-radius: 14px;
-        cursor: pointer;
-        font-size: 15px;
-        font-weight: 600;
-        transition: all 0.2s ease;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+    button:hover{
+        opacity:.9;
     }
 
-    button:hover, .btn-link:hover {
-        background: var(--accent-color);
-        color: #000;
-        box-shadow: 0 0 20px var(--accent-glow);
-        border-color: transparent;
-    }
-
-    button:disabled {
-        background: rgba(255, 255, 255, 0.02) !important;
-        color: rgba(255, 255, 255, 0.2) !important;
-        cursor: not-allowed;
-        box-shadow: none !important;
-    }
-
-    #suggestions {
-        border-radius: 14px;
+    .dashboard-content {
+        max-height: 0;
         overflow: hidden;
-        margin-top: -8px;
-        display: none;
+        transition: max-height 0.3s ease-out, margin-bottom 0.3s ease-out;
+        margin-bottom: 0;
+    }
+
+    .dashboard-content.open {
+        max-height: 1200px; 
+        margin-bottom: 25px;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    @media (max-width: 600px) {
+        h1 { font-size: 32px; }
+        body { padding: 15px; }
+        body.drawer-open .container {
+            transform: translateX(-280px);
+            opacity: 0.2;
+        }
+        .setlist-controls {
+            flex-direction: column !important;
+            align-items: stretch !important;
+        }
+    }
+
+    .dash-box {
+        background: white;
+        padding: 24px;
+        border-radius: 20px;
+        box-shadow: 0 4px 15px rgba(0,0,0,.04);
+        display: flex;
         flex-direction: column;
-        background: rgba(15, 15, 20, 0.95);
-        z-index: 10;
-        border: 1px solid var(--glass-border);
+        gap: 16px;
+        transition: background 0.3s;
     }
-    .suggestion {
-        padding: 14px 20px;
-        cursor: pointer;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    }
-    .suggestion:hover { background: rgba(255, 255, 255, 0.05); }
+    .dash-box h3 { margin: 0; }
 
     .setlist-controls {
         display: flex;
         gap: 12px;
         align-items: flex-end;
         flex-wrap: wrap;
-        margin-bottom: 15px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 16px;
     }
+
     .control-group {
         display: flex;
         flex-direction: column;
@@ -141,76 +123,135 @@
         flex: 1;
         min-width: 140px;
     }
-    .control-group label { font-size: 13px; font-weight: 600; opacity: 0.6; }
 
-    .setlist-pill-box { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
-    .setlist-pill {
-        background: rgba(255,255,255,0.04);
-        border: 1px solid var(--glass-border);
-        padding: 8px 16px;
-        border-radius: 30px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+    .control-group label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #666;
     }
-    .setlist-pill .remove-btn { color: #ff453a; font-weight: bold; cursor: pointer; }
-
-    .audio-section { margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px; }
-    .audio-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px; }
-    .audio-card {
-        background: rgba(0, 0, 0, 0.2);
-        border: 1px solid var(--glass-border);
-        border-radius: 12px;
-        padding: 15px;
-    }
-    .voice-part { font-weight: 700; font-size: 14px; margin-bottom: 8px; color: var(--accent-color); }
-    audio { width: 100%; height: 32px; filter: invert(0.9) hue-rotate(180deg); }
-
-    img { width: 100%; height: auto; border-radius: 12px; margin-top: 20px; border: 1px solid var(--glass-border); }
 
     .side-drawer {
         position: fixed;
         top: 0;
-        right: -390px;
+        right: -390px; 
         width: 360px;
         height: 100%;
+        background: white;
+        box-shadow: -5px 0 25px rgba(0,0,0,0.15);
         z-index: 1000;
-        transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        padding: 24px;
+        transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        padding: 20px;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 25px;
-        background: rgba(10, 10, 12, 0.95);
+        gap: 20px;
+        box-sizing: border-box;
     }
-    .side-drawer.open { right: 0; }
-    
-    .piano { display: flex; height: 120px; background: #000; padding: 2px; border-radius: 8px; position: relative; }
-    .white-key { flex: 1; background: #eee; border: 1px solid #999; border-radius: 0 0 4px 4px; cursor: pointer; }
-    .white-key:active { background: #bbb; }
-    .black-key { position: absolute; width: 6.5%; height: 60%; background: #222; border-radius: 0 0 3px 3px; cursor: pointer; transform: translateX(-50%); }
-    .black-key:active { background: #000; }
 
-    .metro-visuals { display: flex; justify-content: center; gap: 8px; margin: 10px 0; }
-    .metro-dot { width: 10px; height: 10px; background: rgba(255,255,255,0.1); border-radius: 50%; }
-    .metro-dot.active { background: var(--accent-color); box-shadow: 0 0 10px var(--accent-color); }
+    .side-drawer.open { right: 0; }
+    .drawer-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+    .drawer-header h2 { margin: 0; font-size: 22px; }
+
+    .keyboard-container { display: flex; flex-direction: column; gap: 10px; }
+    .piano-controls { display: flex; justify-content: space-between; align-items: center; }
+    .piano { display: flex; position: relative; height: 120px; background: #000; padding: 2px; border-radius: 8px; user-select: none; }
+    .white-key { flex: 1; background: white; border: 1px solid #ccc; border-radius: 0 0 4px 4px; cursor: pointer; z-index: 1; }
+    .white-key:active { background: #e5e5e5; }
+    .black-key { position: absolute; width: 6%; height: 60%; background: black; border-radius: 0 0 3px 3px; cursor: pointer; z-index: 2; transform: translateX(-50%); }
+    .black-key:active { background: #333; }
+
+    .metronome-box { background: #f5f5f7; padding: 15px; border-radius: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .metro-display { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+    .metro-visuals { display: flex; justify-content: center; gap: 6px; margin: 5px 0; flex-wrap: wrap; }
+    .metro-dot { width: 10px; height: 10px; background: #ccc; border-radius: 50%; transition: background 0.08s, transform 0.08s; }
+    .metro-dot.active { background: #ff3b30; transform: scale(1.3); }
+
+    .glossary-box { display: flex; flex-direction: column; gap: 8px; max-height: 240px; overflow-y: auto; padding-right: 5px; }
+    .term-item { border-bottom: 1px solid #eee; padding: 8px 0; }
+    .term-name { font-weight: 600; color: #111; }
+    .term-def { font-size: 14px; color: #666; margin-top: 2px; }
+
+    #suggestions{ background:white; border-radius:16px; margin-top:10px; overflow:hidden; box-shadow:0 5px 20px rgba(0,0,0,.08); max-height: 250px; overflow-y: auto; }
+    .suggestion{ padding:14px 18px; cursor:pointer; border-bottom:1px solid #eee; transition: background 0.15s ease; color: black; }
+    .suggestion:hover{ background:#f5f5f7; }
+    .suggestion.selected { background: #e8e8ed; }
+
+    .card{ background:white; margin-top:20px; padding:20px; border-radius:24px; box-shadow:0 10px 30px rgba(0,0,0,.08); transition: background 0.3s; }
+    .actions{ margin-top:15px; display:flex; gap:10px; flex-wrap:wrap; }
+    .actions button, .actions a { flex: 1; min-width: 120px; }
+    img{ width:100%; height: auto; border-radius:16px; margin-top:15px; }
+    a{ text-decoration:none; display: inline-block; }
+    #scoreViewer{ margin-top:20px; }
+    .audio-section{ margin-top:20px; }
+    .audio-section h3{ margin-bottom:15px; }
+    .audio-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:15px; }
+    .audio-card{ background:#fafafa; border-radius:18px; padding:15px; box-shadow:0 2px 8px rgba(0,0,0,.06); transition: background 0.3s; }
+    .voice-part{ font-weight:600; font-size:16px; margin-bottom:10px; }
+    .audio-card audio{ width:100%; }
+
+    .setlist-pill-box { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; min-height: 40px; align-items: center;}
+    .setlist-pill { background: #e8e8ed; padding: 8px 14px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; color: black; }
+    .setlist-pill:hover { background: #d1d1d6; }
+    .setlist-pill .remove-btn { color: #ff3b30; font-weight: bold; cursor: pointer; margin-left: 4px; }
+
+    .saved-setlists-panel {
+        background: #f5f5f7;
+        border-radius: 14px;
+        padding: 14px;
+        font-size: 14px;
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    .saved-setlists-panel.open { display: flex; }
+    .saved-item-row {
+        display: flex;
+        justify-content: space-between;
+        background: white;
+        padding: 8px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        border: 1px solid transparent;
+    }
+    .saved-item-row:hover { border-color: #007aff; }
+
+    /* Dark Mode styles */
+    .dark-mode{ background:#111; color:white; }
+    .dark-mode .card, .dark-mode .dash-box, .dark-mode .side-drawer, .dark-mode .saved-item-row { background:#1c1c1e; color:white; }
+    .dark-mode input, .dark-mode textarea, .dark-mode select { background:#2c2c2e; color:white; }
+    .dark-mode button { background:white; color:black; }
+    .dark-mode .drawer-header, .dark-mode .term-item, .dark-mode .setlist-controls { border-color: #333; }
+    .dark-mode .control-group label { color: #aaa; }
+    .dark-mode .term-name { color: #fff; }
+    .dark-mode .term-def { color: #aaa; }
+    .dark-mode .audio-card, .dark-mode .metronome-box, .dark-mode .saved-setlists-panel { background:#2c2c2e; }
+    
+    .dark-mode #suggestions { background: #1c1c1e; box-shadow: 0 5px 20px rgba(0,0,0,.4); }
+    .dark-mode .suggestion { color: white; border-bottom-color: #2c2c2e; }
+    .dark-mode .suggestion:hover { background: #2c2c2e; }
+    .dark-mode .suggestion.selected { background: #3a3a3c; }
+    .dark-mode .setlist-pill { background: #2c2c2e; color: white; }
+    .dark-mode .setlist-pill:hover { background: #3a3a3c; }
     </style>
 </head>
+
 <body>
 
-<div id="musicalDrawer" class="side-drawer glass-panel">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2 style="margin:0; font-size:20px;">🎼 Toolkit</h2>
-        <button onclick="toggleDrawer()" style="padding: 6px 12px;">✕</button>
+<div id="musicalDrawer" class="side-drawer">
+    <div class="drawer-header">
+        <h2>🎼 Musician Toolkit</h2>
+        <button onclick="toggleDrawer()" style="padding: 6px 14px; font-size:14px; margin-left: 20px;">← Go Back</button>
     </div>
 
-    <div style="display:flex; flex-direction:column; gap:12px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <button onclick="shiftOctave(-1)">◀</button>
+    <div class="keyboard-container">
+        <div class="piano-controls">
+            <button onclick="shiftOctave(-1)">◀ Octave</button>
             <span id="octaveDisplay" style="font-weight:bold;">Octave: 4</span>
-            <button onclick="shiftOctave(1)">▶</button>
+            <button onclick="shiftOctave(1)">Octave ▶</button>
         </div>
-        <div class="piano">
+        <div class="piano" id="pianoLayout">
             <div class="white-key" onclick="playTone('C')"></div>
             <div class="white-key" onclick="playTone('D')"></div>
             <div class="white-key" onclick="playTone('E')"></div>
@@ -227,51 +268,96 @@
         </div>
     </div>
 
-    <div style="display:flex; flex-direction:column; gap:12px;">
-        <div style="display:flex; justify-content:space-between; font-weight:700;">
+    <div class="metronome-box">
+        <div class="metro-display">
             <span>Metronome</span>
             <span id="bpmDisplay">100 BPM</span>
         </div>
         <input type="range" id="tempoSlider" min="40" max="220" value="100" oninput="updateBpm(this.value)">
+        
+        <div style="display:flex; gap:10px; align-items:center; margin-top:5px;">
+            <span style="font-size:14px; font-weight:600;">Time Sig:</span>
+            <select id="timeSignatureSelect" onchange="updateTimeSignature(this.value)" style="padding:6px; font-size:14px; border-radius:8px;">
+                <option value="4">4/4 Common Time</option>
+                <option value="3">3/4 Waltz Meter</option>
+                <option value="2">2/4 March Meter</option>
+                <option value="2_cut">2/2 Cut Time (Alla Breve)</option>
+                <option value="3_8">3/8 Simple Triple</option>
+                <option value="6">6/8 Compound Duple</option>
+                <option value="9">9/8 Compound Triple</option>
+                <option value="12">12/8 Compound Quadruple</option>
+                <option value="5">5/4 Asymmetric Meter</option>
+                <option value="7">7/4 Asymmetric Meter</option>
+            </select>
+        </div>
+
         <div class="metro-visuals" id="metroVisualsContainer"></div>
-        <button id="metroBtn" onclick="toggleMetronome()">▶ Start</button>
+        <button id="metroBtn" onclick="toggleMetronome()" style="width:100%;">▶ Start</button>
+    </div>
+
+    <div>
+        <h3 style="margin-top:0; margin-bottom:10px;">📚 Reference Dictionary</h3>
+        <input type="text" id="glossarySearch" placeholder="Search terms..." oninput="filterGlossary(this.value)" style="width:100%; padding:10px; font-size:14px; border-radius:10px; margin-bottom:10px; box-sizing: border-box;">
+        <div class="glossary-box" id="glossaryList"></div>
     </div>
 </div>
 
 <div class="container">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <button onclick="toggleDashboard()">📂 Setlist Builder</button>
-        <button onclick="toggleDrawer()" style="background:rgba(255,255,255,0.05);">🎵 Toolkit</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <button onclick="toggleDashboard()" style="padding: 10px 15px;">📂 Setlist Manager</button>
+        <div style="display:flex; gap:10px;">
+            <button onclick="toggleDrawer()" style="background:#007aff; color:white;">🎵 Music Tools</button>
+            <button onclick="toggleTheme()">🌓 Theme</button>
+        </div>
     </div>
 
-    <!-- SETLIST BUILDER PANEL -->
-    <div id="weeklyDashboard" style="display:none;">
-        <div class="glass-panel">
-            <h3 style="margin:0 0 15px 0;">📋 Setlist Configuration</h3>
-            <div class="setlist-controls">
-                <div class="control-group">
-                    <label>Target Set Index</label>
-                    <select id="setlistNumSelect" onchange="renderActiveSetlistPills()">
-                        <option value="1">Configuration Set 1</option>
-                        <option value="2">Configuration Set 2</option>
-                    </select>
+    <!-- SETLIST MANAGER PANEL -->
+    <div id="weeklyDashboard" class="dashboard-content">
+        <div class="dashboard-grid">
+            <div class="dash-box">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="display: flex; align-items: center; gap: 8px;">📋 Service Setlist Builder</h3>
+                    <button onclick="toggleSavedListOverview()" style="font-size: 13px; padding: 6px 12px; background: #8e8e93;">📋 View All Setlists</button>
                 </div>
-                <div class="control-group" style="flex:1.2; flex-direction:row; align-items:flex-end; gap:8px;">
-                    <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
-                        <label>Hymn ID #</label>
-                        <input type="number" id="quickAddHymnNum" placeholder="e.g. 10">
+
+                <div class="setlist-controls">
+                    <div class="control-group" style="flex: 0.5; min-width: 90px;">
+                        <label for="setlistNumSelect">Setlist #</label>
+                        <select id="setlistNumSelect" onchange="loadActiveConfiguration()" style="padding:10px; border-radius:12px; font-size:15px;">
+                            <option value="1">Set 1</option>
+                            <option value="2">Set 2</option>
+                            <option value="3">Set 3</option>
+                            <option value="4">Set 4</option>
+                            <option value="5">Set 5</option>
+                        </select>
                     </div>
-                    <button onclick="addHymnToActiveSetlist()" style="height:52px;">+ Add</button>
+
+                    <div class="control-group" style="flex: 1.5;">
+                        <label for="setlistDateDropdown">Target Service Date</label>
+                        <select id="setlistDateDropdown" onchange="loadActiveConfiguration()" style="padding:10px; border-radius:12px; font-size:15px;"></select>
+                    </div>
+
+                    <div class="control-group" style="flex: 1.2; flex-direction: row; align-items: flex-end; gap: 8px;">
+                        <div style="display: flex; flex-direction: column; gap: 6px; flex: 1;">
+                            <label for="quickAddHymnNum">Hymn #</label>
+                            <input type="number" id="quickAddHymnNum" placeholder="e.g. 23" style="padding:10px; border-radius:12px; font-size:15px;">
+                        </div>
+                        <button onclick="addHymnToActiveSetlist()" style="padding: 12px 14px; background: #007aff; height: 43px; display: flex; align-items: center;">+ Add</button>
+                    </div>
                 </div>
+
+                <div id="savedSetlistsOverview" class="saved-setlists-panel"></div>
+
+                <div class="setlist-pill-box" id="activeSetlistContainer"></div>
+                <p style="font-size:12px; color:#8e8e93; margin: 0;">💡 Pro-Tip: Tap any stacked song number pill above to auto-load its sheet music scores instantly!</p>
             </div>
-            <div class="setlist-pill-box" id="activeSetlistContainer"></div>
         </div>
     </div>
 
     <h1>Sankey Hymnal</h1>
 
     <div class="search-bar">
-        <input id="searchBox" placeholder="Search by hymn number or title query..." autocomplete="off">
+        <input id="searchBox" placeholder="Search hymn number or title" autocomplete="off">
         <button onclick="searchHymn()">Search</button>
     </div>
     
@@ -281,227 +367,495 @@
 </div>
 
 <script>
-// BOTH SATB AND NON-SATB HYMNS ARE REGISTERED HERE
-const localHymnsDataset = [
-  { "number": "1", "title": "Praise, My Soul, The King Of Heaven!", "page": "1", "hasSATB": true },
-  { "number": "2", "title": "A Mighty Fortress Is Our God", "page": "2", "hasSATB": false },
-  { "number": "3", "title": "A Safe Stronghold", "page": "3", "hasSATB": false },
-  { "number": "4", "title": "O Worship the Lord in the Beauty of Holiness", "page": "4", "hasSATB": false },
-  { "number": "10", "title": "Day by Day the manna fell", "page": "10", "hasSATB": true },
-  { "number": "11", "title": "Oh, Worship the King", "page": "11", "hasSATB": true },
-  { "number": "100", "title": "Great Is Thy Faithfulness", "page": "100", "hasSATB": false },
-  { "number": "101", "title": "All Hail the Power of Jesus' Name", "page": "101", "hasSATB": false },
-  { "number": "102", "title": "Hallelujah What a Savior", "page": "102", "hasSATB": true },
-  { "number": "111", "title": "Joy to the World", "page": "111", "hasSATB": true },
-  { "number": "112", "title": "How Sweet the Name", "page": "112", "hasSATB": true },
-  { "number": "113", "title": "Blessed Be the Fountain", "page": "113", "hasSATB": true },
-  { "number": "1000", "title": "The Lord's My Shepherd", "page": "1000", "hasSATB": false },
-  { "number": "1001", "title": "Rock of Ages", "page": "1001", "hasSATB": false },
-  { "number": "1084", "title": "Jesus shall reign", "page": "1084", "hasSATB": true },
-  { "number": "1131", "title": "Tell me the Old, Old Story", "page": "1131", "hasSATB": true },
-  { "number": "1134", "title": "There is a Green Hill Far Away (2nd tune)", "page": "1134", "hasSATB": true }
+const glossaryTerms = [
+    { name: "4/4 Time (Common Time)", def: "4 beats per measure. Each quarter note gets 1 count." },
+    { name: "3/4 Time (Waltz Meter)", def: "3 beats per measure. Used heavily in classical waltzes and historic hymns." },
+    { name: "2/4 Time (March Meter)", def: "2 beats per measure. Strong-weak regular alternating stride pulse." },
+    { name: "2/2 Time (Cut Time / Alla Breve)", def: "2 beats per measure, but the half note gets the beat count." },
+    { name: "6/8 Time", def: "Compound meter with 2 primary macro-pulses, dividing into three eighth notes." },
+    { name: "Andante", def: "A moderate, unhurried, literal 'walking pace' configuration (76-108 BPM)." },
+    { name: "Moderato", def: "Moderately paced; smack in the center of fast and slow (108-120 BPM)." },
+    { name: "Allegro", def: "Fast, bright, cheerful, and lively execution speed (120-156 BPM)." },
+    { name: "Fermata", def: "Hold or sustain the note indefinitely until cut off by the leader." }
 ];
 
-/* SOUND MODULE ENGINE */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let activeOctave = 4;
-const baseFrequencies = { 'C':16.35, 'C#':17.32, 'D':18.35, 'D#':19.45, 'E':20.60, 'F':21.83, 'F#':23.12, 'G':24.50, 'G#':25.96, 'A':27.50, 'A#':29.14, 'B':30.87, 'C2':32.70 };
+const baseFrequencies = {
+    'C': 16.35, 'C#': 17.32, 'D': 18.35, 'D#': 19.45, 'E': 20.60,
+    'F': 21.83, 'F#': 23.12, 'G': 24.50, 'G#': 25.96, 'A': 27.50, 'A#': 29.14, 'B': 30.87, 'C2': 32.70
+};
 
 function playTone(note) {
-    if(audioCtx.state === 'suspended') audioCtx.resume();
     let fundamental = baseFrequencies[note] * Math.pow(2, activeOctave);
     let now = audioCtx.currentTime;
-    let gain = audioCtx.createGain();
-    gain.connect(audioCtx.destination);
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.2, now + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
-    let osc = audioCtx.createOscillator();
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(fundamental, now);
-    osc.connect(gain); osc.start(now); osc.stop(now + 1.0);
-}
-function shiftOctave(dir) { activeOctave = Math.max(2, Math.min(6, activeOctave + dir)); document.getElementById("octaveDisplay").innerText = "Octave: " + activeOctave; }
-function toggleDrawer() { document.getElementById("musicalDrawer").classList.toggle("open"); }
+    
+    let masterGain = audioCtx.createGain();
+    masterGain.connect(audioCtx.destination);
+    masterGain.gain.setValueAtTime(0, now);
+    masterGain.gain.linearRampToValueAtTime(0.30, now + 0.006); 
+    masterGain.gain.exponentialRampToValueAtTime(0.12, now + 0.28); 
+    masterGain.gain.exponentialRampToValueAtTime(0.0001, now + 1.8); 
 
-/* METRONOME */
-let metroInterval = null, isMetroRunning = false, bpm = 100, currentBeat = 0, beatsPerMeasure = 4;
-function updateBpm(val) { bpm = val; document.getElementById("bpmDisplay").innerText = val + " BPM"; if (isMetroRunning) { stopMetronome(); startMetronome(); } }
-function toggleMetronome() { if (isMetroRunning) stopMetronome(); else startMetronome(); }
+    const overtones = [[1.0, 0.50, 'sine'], [2.0, 0.25, 'sine'], [3.0, 0.12, 'triangle']];
+    overtones.forEach(([multiplier, volumeFactor, waveType]) => {
+        let osc = audioCtx.createOscillator();
+        let toneGain = audioCtx.createGain();
+        osc.type = waveType;
+        osc.frequency.setValueAtTime(fundamental * multiplier, now);
+        toneGain.gain.setValueAtTime(volumeFactor, now);
+        toneGain.gain.exponentialRampToValueAtTime(0.001, now + (1.8 / multiplier));
+        osc.connect(toneGain);
+        toneGain.connect(masterGain);
+        osc.start(now);
+        osc.stop(now + 1.8);
+    });
+}
+
+function shiftOctave(direction) {
+    activeOctave = Math.max(2, Math.min(6, activeOctave + direction));
+    document.getElementById("octaveDisplay").innerText = "Octave: " + activeOctave;
+}
+
+function toggleDrawer() {
+    const drawer = document.getElementById("musicalDrawer");
+    drawer.classList.toggle("open");
+    document.body.classList.toggle("drawer-open", drawer.classList.contains("open"));
+}
+
+let metroInterval = null;
+let isMetroRunning = false;
+let bpm = 100;
+let currentBeat = 0;
+let beatsPerMeasure = 4;
+let timingFactor = 1.0;
+
+function updateBpm(val) {
+    bpm = val;
+    document.getElementById("bpmDisplay").innerText = val + " BPM";
+    if (isMetroRunning) { stopMetronome(); startMetronome(); }
+}
+
+function updateTimeSignature(val) {
+    if (val === "2_cut") { beatsPerMeasure = 2; timingFactor = 2.0; } 
+    else if (val === "3_8" || val === "6" || val === "9" || val === "12") { beatsPerMeasure = parseInt(val) || 6; timingFactor = 0.5; }
+    else { beatsPerMeasure = parseInt(val); timingFactor = 1.0; }
+    
+    currentBeat = 0;
+    let html = "";
+    for(let i = 0; i < beatsPerMeasure; i++) { html += `<div class="metro-dot" id="dotM${i}"></div>`; }
+    document.getElementById("metroVisualsContainer").innerHTML = html;
+    if (isMetroRunning) { stopMetronome(); startMetronome(); }
+}
+
+function toggleMetronome() { if (isMetroRunning) { stopMetronome(); } else { startMetronome(); } }
 function startMetronome() {
-    isMetroRunning = true; document.getElementById("metroBtn").innerText = "⏹ Stop";
+    isMetroRunning = true;
+    document.getElementById("metroBtn").innerText = "⏹ Stop";
+    document.getElementById("metroBtn").style.background = "#ff3b30";
     metroInterval = setInterval(() => {
-        for(let i=0; i<beatsPerMeasure; i++) document.getElementById(`dotM${i}`)?.classList.remove('active');
+        for(let i=0; i<beatsPerMeasure; i++){ document.getElementById(`dotM${i}`)?.classList.remove('active'); }
         document.getElementById(`dotM${currentBeat}`)?.classList.add('active');
+        let osc = audioCtx.createOscillator();
+        let gainNode = audioCtx.createGain();
+        osc.frequency.setValueAtTime(currentBeat === 0 ? 1150 : 680, audioCtx.currentTime); 
+        gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+        osc.connect(gainNode); gainNode.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.06);
         currentBeat = (currentBeat + 1) % beatsPerMeasure;
-    }, (60 / bpm) * 1000);
+    }, ((60 / bpm) * 1000) * timingFactor);
 }
-function stopMetronome() { isMetroRunning = false; clearInterval(metroInterval); document.getElementById("metroBtn").innerText = "▶ Start"; currentBeat = 0; }
+function stopMetronome() {
+    isMetroRunning = false; clearInterval(metroInterval);
+    document.getElementById("metroBtn").innerText = "▶ Start";
+    document.getElementById("metroBtn").style.background = "";
+    currentBeat = 0;
+}
 
-/* CONFIGURATION MANAGEMENT SELECTION PLATES */
-let mockSetlists = { "1": ["1", "2"], "2": [] };
+function populateGlossary(list) {
+    let html = "";
+    list.forEach(t => { html += `<div class="term-item"><div class="term-name">${t.name}</div><div class="term-def">${t.def}</div></div>`; });
+    document.getElementById("glossaryList").innerHTML = html || "<div>No terms found.</div>";
+}
+function filterGlossary(q) { populateGlossary(glossaryTerms.filter(t => t.name.toLowerCase().includes(q.toLowerCase()))); }
+
+
+/* --- SETLIST MANAGEMENT SYSTEM --- */
+let serverSetlistsGlobal = {};
+
+function generateDateOptions() {
+    const dropdown = document.getElementById("setlistDateDropdown");
+    dropdown.innerHTML = "";
+    
+    const today = new Date();
+    for (let i = -14; i <= 28; i++) {
+        const d = new Date();
+        d.setDate(today.getDate() + i);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const dateString = `${yyyy}-${mm}-${dd}`;
+        
+        const option = document.createElement("option");
+        option.value = dateString;
+        
+        const optionsFormat = { weekday: 'short', month: 'short', day: 'numeric' };
+        let label = d.toLocaleDateString(undefined, optionsFormat);
+        if (i === 0) label += " (Today)";
+        option.text = label;
+        
+        dropdown.appendChild(option);
+    }
+    dropdown.value = today.toISOString().split('T')[0];
+}
+
+function getActiveStorageKey() {
+    const date = document.getElementById("setlistDateDropdown").value;
+    const setNum = document.getElementById("setlistNumSelect").value;
+    return `${date}::${setNum}`;
+}
+
+async function fetchAllSetlists() {
+    try {
+        const response = await fetch('/api/setlists');
+        serverSetlistsGlobal = await response.json();
+        renderActiveSetlistPills();
+        renderSavedOverviewList();
+    } catch (err) { console.error("Error retrieving setlists:", err); }
+}
+
 function renderActiveSetlistPills() {
-    const setNum = document.getElementById("setlistNumSelect").value;
-    const hymns = mockSetlists[setNum] || [];
+    const compositeKey = getActiveStorageKey();
+    const hymns = serverSetlistsGlobal[compositeKey] || [];
     const container = document.getElementById("activeSetlistContainer");
-    if(!hymns.length) { container.innerHTML = "<div style='opacity:0.4;'>Empty configuration container.</div>"; return; }
-    container.innerHTML = hymns.map(num => `
-        <div class="setlist-pill">
-            <span onclick="quickLoad('${num}')" style="cursor:pointer;">🎵 Hymn ${num}</span>
-            <span class="remove-btn" onclick="removeHymn('${num}')">×</span>
-        </div>
-    `).join('');
+    
+    if (hymns.length === 0) {
+        container.innerHTML = "<div style='color:#8e8e93; padding:4px 0;'>No hymns added to this setup configuration yet.</div>";
+        return;
+    }
+    
+    let html = "";
+    hymns.forEach((num) => {
+        html += `
+        <div class="setlist-pill" onclick="quickLoad('${num}')">
+            🎵 Hymn ${num}
+            <span class="remove-btn" onclick="event.stopPropagation(); removeHymnFromSetlist('${num}')">×</span>
+        </div>`;
+    });
+    container.innerHTML = html;
 }
-function addHymnToActiveSetlist() {
-    const num = document.getElementById("quickAddHymnNum").value.trim();
-    const setNum = document.getElementById("setlistNumSelect").value;
-    if(num && !mockSetlists[setNum].includes(num)) { mockSetlists[setNum].push(num); renderActiveSetlistPills(); }
-    document.getElementById("quickAddHymnNum").value = "";
+
+function renderSavedOverviewList() {
+    const panel = document.getElementById("savedSetlistsOverview");
+    let html = "";
+    let count = 0;
+
+    for (const [key, hymns] of Object.entries(serverSetlistsGlobal)) {
+        if (hymns && hymns.length > 0) {
+            count++;
+            const parts = key.split("::");
+            const datePart = parts[0];
+            const setPart = parts[1] || "1";
+            
+            html += `
+            <div class="saved-item-row" onclick="selectSetlistFromOverview('${datePart}', '${setPart}')">
+                <strong>📅 ${datePart} (Set ${setPart})</strong>
+                <span>${hymns.length} Hymns: [ ${hymns.join(", ")} ]</span>
+            </div>`;
+        }
+    }
+    
+    if (count === 0) {
+        panel.innerHTML = "<div style='color:#8e8e93; text-align:center; padding:10px;'>No active saved setlists found anywhere.</div>";
+    } else {
+        panel.innerHTML = html;
+    }
 }
-function removeHymn(num) {
-    const setNum = document.getElementById("setlistNumSelect").value;
-    mockSetlists[setNum] = mockSetlists[setNum].filter(n => n !== num);
+
+function toggleSavedListOverview() {
+    const panel = document.getElementById("savedSetlistsOverview");
+    panel.classList.toggle("open");
+}
+
+function selectSetlistFromOverview(date, setNum) {
+    document.getElementById("setlistDateDropdown").value = date;
+    document.getElementById("setlistNumSelect").value = setNum;
+    renderActiveSetlistPills();
+    document.getElementById("savedSetlistsOverview").classList.remove("open");
+}
+
+function loadActiveConfiguration() {
     renderActiveSetlistPills();
 }
 
-/* RENDERING & SEARCH ENGINE ROUTE PARSERS */
-const searchBox = document.getElementById("searchBox");
-const suggestionsBox = document.getElementById("suggestions");
-let searchResultsCache = [], activeHymnPages = [], currentImageIndex = 0;
+const async_update_setlist = async (compositeKey, hymnsArray) => {
+    try {
+        const response = await fetch('/api/setlists', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date: compositeKey, hymns: hymnsArray })
+        });
+        const resData = await response.json();
+        serverSetlistsGlobal = resData.data;
+        renderActiveSetlistPills();
+        renderSavedOverviewList();
+    } catch(err) { console.error("Error saving setlist instance:", err); }
+};
 
-function toggleDashboard() { const d = document.getElementById("weeklyDashboard"); d.style.display = d.style.display === "none" ? "block" : "none"; }
-
-searchBox.addEventListener("input", () => {
-    let q = searchBox.value.trim().toLowerCase();
-    if(!q) { suggestionsBox.style.display = "none"; return; }
-    let matches = localHymnsDataset.filter(h => h.number.includes(q) || h.title.toLowerCase().includes(q));
-    if(!matches.length) { suggestionsBox.style.display = "none"; return; }
-    suggestionsBox.innerHTML = matches.slice(0, 5).map(h => `<div class="suggestion" onclick="selectSuggestion('${h.number}')"><strong>${h.number}</strong> — ${h.title}</div>`).join('');
-    suggestionsBox.style.display = "flex";
-});
-
-function selectSuggestion(num) { searchBox.value = num; suggestionsBox.style.display = "none"; searchHymn(num); }
-function quickLoad(num) { searchBox.value = num; searchHymn(num); }
-
-function searchHymn(targetNum = null) {
-    let q = targetNum || searchBox.value.trim();
-    if(!q) return;
-    suggestionsBox.style.display = "none";
-
-    let results = localHymnsDataset.filter(h => h.number === q || h.title.toLowerCase().includes(q.toLowerCase()));
-    let container = document.getElementById("results");
+function addHymnToActiveSetlist() {
+    const input = document.getElementById("quickAddHymnNum");
+    const num = input.value.trim();
+    if (!num) return;
     
-    if(!results.length) {
-        container.innerHTML = `<div class="glass-panel">No structural elements found matching criteria.</div>`;
-        document.getElementById("scoreViewer").innerHTML = "";
-        return;
+    const compositeKey = getActiveStorageKey();
+    const currentHymns = serverSetlistsGlobal[compositeKey] || [];
+    
+    if (!currentHymns.includes(num)) {
+        currentHymns.push(num);
+        async_update_setlist(compositeKey, currentHymns);
     }
-
-    searchResultsCache = results;
-    let html = "";
-
-    results.forEach((hymn, index) => {
-        const ytUrl = "https://www.youtube.com/results?search_query=" + encodeURIComponent(hymn.title + " sankey hymn");
-        let audioHtml = "";
-
-        if (hymn.hasSATB) {
-            const partsMap = {
-                "Full Ensemble SATB": `${hymn.number}-SATB-${hymn.title}.mp3`,
-                "Soprano Vocal Track": `${hymn.number}-S-${hymn.title}.mp3`,
-                "Alto Vocal Track": `${hymn.number}-A-${hymn.title}.mp3`,
-                "Tenor Vocal Track": `${hymn.number}-T-${hymn.title}.mp3`
-            };
-
-            audioHtml = `<div class="audio-section"><h3>🎵 SATB Split Vocal Tracks</h3><div class="audio-grid">`;
-            for (const [partName, fileName] of Object.entries(partsMap)) {
-                audioHtml += `
-                    <div class="audio-card">
-                        <div class="voice-part">${partName}</div>
-                        <audio controls preload="none">
-                            <source src="/SANKEY_Learning_files/${encodeURIComponent(hymn.number + '-' + hymn.title.replace('!', ''))}/${encodeURIComponent(fileName)}" type="audio/mpeg">
-                        </audio>
-                    </div>`;
-            }
-            audioHtml += `</div></div>`;
-        } else {
-            // Placeholder notice ensuring the layout stays complete for songs without backing tracks
-            audioHtml = `<div class="audio-section" style="opacity: 0.5;"><p>ℹ️ No SATB learning tracks available for this selection.</p></div>`;
-        }
-
-        html += `
-        <div class="glass-panel" style="margin-top:20px;">
-            <h2>${hymn.number} — ${hymn.title}</h2>
-            <p style="opacity:0.6;">Sankey Compendium Page Reference: ${hymn.page}</p>
-            <div style="display:flex; gap:12px; margin-top:15px; flex-wrap:wrap;">
-                <button onclick="calculateAndShowScore(${index})">🔍 View Score Sheet</button>
-                <a class="btn-link" target="_blank" href="${ytUrl}">📺 Find on YouTube</a>
-            </div>
-            ${audioHtml}
-        </div>`;
-    });
-
-    container.innerHTML = html;
-    calculateAndShowScore(0);
+    input.value = "";
 }
 
-/* DYNAMIC DIRECTORY ROUTING AND RANGE PARSER (`pages` vs `pages2`) */
-function calculateAndShowScore(index) {
-    let hymn = searchResultsCache[index];
-    if(!hymn) return;
+function removeHymnFromSetlist(num) {
+    const compositeKey = getActiveStorageKey();
+    let currentHymns = serverSetlistsGlobal[compositeKey] || [];
+    currentHymns = currentHymns.filter(item => item !== num);
+    async_update_setlist(compositeKey, currentHymns);
+}
+
+window.onload = function(){
+    if(localStorage.getItem("theme") === "dark") document.body.classList.add("dark-mode");
+    generateDateOptions();
+    fetchAllSetlists();
+    if(localStorage.getItem("dashboardOpen") === "true") document.getElementById("weeklyDashboard").classList.add("open");
+    updateTimeSignature("4"); populateGlossary(glossaryTerms);
+};
+
+
+/* --- FIXED AND ALIGNED AUTO-LOAD ROUTING CONTROLLER --- */
+const searchBox = document.getElementById("searchBox");
+const suggestionsBox = document.getElementById("suggestions");
+let currentFocus = -1;
+let searchResultsCache = [];
+let activeHymnPages = [];
+let currentImageIndex = 0;
+
+function toggleDashboard() {
+    const d = document.getElementById("weeklyDashboard");
+    d.classList.toggle("open"); localStorage.setItem("dashboardOpen", d.classList.contains("open"));
+}
+function toggleTheme(){ document.body.classList.toggle("dark-mode"); localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light"); }
+
+searchBox.addEventListener("keydown", function(e){
+    const items = suggestionsBox.getElementsByClassName("suggestion");
+    if (e.key === "ArrowDown") { e.preventDefault(); currentFocus++; addActive(items); } 
+    else if (e.key === "ArrowUp") { e.preventDefault(); currentFocus--; addActive(items); } 
+    else if (e.key === "Enter") {
+        e.preventDefault();
+        if (currentFocus > -1 && items[currentFocus]) { 
+            items[currentFocus].click(); 
+        } else { 
+            suggestionsBox.innerHTML = ""; 
+            searchHymn(); 
+        }
+    }
+});
+
+searchBox.addEventListener("input", showSuggestions);
+document.addEventListener("click", (e) => { if (e.target !== searchBox) suggestionsBox.innerHTML = ""; });
+
+async function showSuggestions(){
+    let query = searchBox.value.trim();
+    currentFocus = -1;
+    if(query.length < 1){ 
+        suggestionsBox.innerHTML = ""; 
+        return; 
+    }
+    
+    if(query.includes(" — ")) query = query.split(" — ")[0];
+    if(query.includes(" - ")) query = query.split(" - ")[0];
+
+    try {
+        const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        let html = "";
+        data.slice(0,10).forEach(hymn => {
+            const safeTitle = hymn.title.replace(/'/g, "\\'");
+            html += `<div class="suggestion" onclick="selectSuggestion('${hymn.number}', '${safeTitle}')"><strong>${hymn.number}</strong> — ${hymn.title}</div>`;
+        });
+        suggestionsBox.innerHTML = html;
+    } catch(err) { console.error(err); }
+}
+
+function selectSuggestion(number, title) {
+    searchBox.value = number; 
+    suggestionsBox.innerHTML = "";
+    searchHymn(number);
+}
+
+function addActive(items) {
+    if (!items || items.length === 0) return;
+    removeActive(items);
+    currentFocus = (currentFocus + items.length) % items.length;
+    items[currentFocus].classList.add("selected");
+}
+function removeActive(items) { for (let i = 0; i < items.length; i++) items[i].classList.remove("selected"); }
+
+function quickLoad(number) { 
+    searchBox.value = number; 
+    searchHymn(number); 
+}
+
+async function searchHymn(exactNumber = null){
+    let query = searchBox.value.trim();
+    if(!query) return;
+    
+    if(query.includes(" — ")) query = query.split(" — ")[0];
+    if(query.includes(" - ")) query = query.split(" - ")[0];
+    if(exactNumber) query = exactNumber;
+
+    try {
+        const response = await fetch(`/search?q=${encodeURIComponent(query)}`);
+        const data = await response.json();
+        let html = "";
+
+        if(!data || data.length === 0){
+            html = "<div class='card'>No hymns found.</div>";
+            searchResultsCache = [];
+            document.getElementById("results").innerHTML = html;
+            document.getElementById("scoreViewer").innerHTML = "";
+            return;
+        }
+
+        let finalData = data;
+        if(exactNumber) {
+            finalData = data.filter(hymn => String(hymn.number).trim() === String(exactNumber).trim());
+            if(finalData.length === 0) finalData = data; 
+        }
+        
+        searchResultsCache = finalData;
+
+        finalData.forEach((hymn, index) => {
+            const yt = "https://www.youtube.com/results?search_query=" + encodeURIComponent(hymn.title + " hymn");
+            let audioHtml = "";
+            if(hymn.audio && Object.keys(hymn.audio).length){
+                audioHtml = `<div class="audio-section"><h3>🎵 Recordings</h3><div class="audio-grid">`;
+                for(const [part,file] of Object.entries(hymn.audio)){
+                    audioHtml += `<div class="audio-card"><div class="voice-part">${part}</div><audio controls><source src="/audio/${file}" type="audio/mpeg"></audio></div>`;
+                }
+                audioHtml += `</div></div>`;
+            }
+
+            html += `
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    ${hymn.prev_hymn ? `<button onclick="quickLoad('${hymn.prev_hymn}')">← ${hymn.prev_hymn}</button>` : '<span></span>'}
+                    ${hymn.next_hymn ? `<button onclick="quickLoad('${hymn.next_hymn}')">${hymn.next_hymn} →</button>` : '<span></span>'}
+                </div>
+                <h2>${hymn.number} - ${hymn.title}</h2>
+                <p>Page ${hymn.page || ''}</p>
+                <div class="actions">
+                    <button onclick="showScoreFromCache(${index})">View Score</button>
+                    <a target="_blank" href="${yt}"><button style="width:100%;">YouTube</button></a>
+                </div>
+                ${audioHtml}
+            </div>`;
+        });
+
+        document.getElementById("results").innerHTML = html;
+        
+        if(searchResultsCache.length > 0) {
+            showScoreFromCache(0);
+        }
+    } catch (e) {
+        console.error("Critical Fallback Error:", e);
+    }
+}
+
+function showScoreFromCache(index) {
+    const selectedHymn = searchResultsCache[index];
+    if (!selectedHymn) return;
     
     activeHymnPages = [];
     
-    // Check if the page contains a structural layout range separator dashboard (e.g., "12-14")
-    if (String(hymn.page).includes("-")) {
-        let ranges = String(hymn.page).split("-");
-        let start = parseInt(ranges[0], 10);
-        let end = parseInt(ranges[1], 10);
-        for(let p = start; p <= end; p++) {
-            let targetFolder = (p > 1000) ? "pages2" : "pages";
-            activeHymnPages.push(`/static/${targetFolder}/Sankey_${p}.jpg`);
+    // 1. Check for explicit file structural properties in your hymns.json
+    let rawPages = selectedHymn.image_path || selectedHymn.image_urls || selectedHymn.images || selectedHymn.pages;
+    
+    if (rawPages) {
+        if (typeof rawPages === 'string') {
+            activeHymnPages = [rawPages];
+        } else if (Array.isArray(rawPages)) {
+            activeHymnPages = rawPages;
         }
-    } else {
-        let pageVal = parseInt(hymn.page, 10);
-        let targetFolder = (pageVal > 1000) ? "pages2" : "pages";
-        activeHymnPages.push(`/static/${targetFolder}/Sankey_${pageVal}.jpg`);
+    }
+
+    // 2. Alignment fix: Parse numeric pages if no direct image property was provided
+    if (activeHymnPages.length === 0 && selectedHymn.page !== undefined && selectedHymn.page !== null) {
+        const pageStr = String(selectedHymn.page).trim();
+        if (pageStr.includes("-")) {
+            const parts = pageStr.split("-");
+            const startPage = parseInt(parts[0], 10);
+            const endPage = parseInt(parts[1], 10);
+            if (!isNaN(startPage) && !isNaN(endPage)) {
+                for (let p = startPage; p <= endPage; p++) {
+                    activeHymnPages.push(`/static/pages/Sankey_${p}.jpg`);
+                }
+            }
+        } else {
+            const singlePage = parseInt(pageStr, 10);
+            if (!isNaN(singlePage)) {
+                activeHymnPages.push(`/static/pages/Sankey_${singlePage}.jpg`);
+            }
+        }
+    }
+
+    // 3. Fall back directly to hymn number index naming if pages aren't defined
+    if (activeHymnPages.length === 0 && selectedHymn.number) {
+        const cleanNum = String(selectedHymn.number).trim();
+        activeHymnPages = [`/static/pages/Sankey_${cleanNum}.jpg`];
     }
 
     currentImageIndex = 0;
     renderPage();
 }
 
-function renderPage() {
-    let container = document.getElementById("scoreViewer");
-    if(!activeHymnPages.length) { container.innerHTML = ""; return; }
-    
-    container.innerHTML = `
-        <div class="glass-panel" style="margin-top:20px; text-align:center;">
-            <div style="display:flex; justify-content:center; gap:10px; margin-bottom:15px;">
-                <button onclick="previousPage()" ${currentImageIndex===0?'disabled':''}>← Previous</button>
-                <button disabled style="background:transparent; color:#fff; opacity:1 !important; border-color:var(--glass-border);">Sheet View (${currentImageIndex+1}/${activeHymnPages.length})</button>
-                <button onclick="nextPage()" ${currentImageIndex===activeHymnPages.length-1?'disabled':''}>Next →</button>
-            </div>
-            <img src="${activeHymnPages[currentImageIndex]}" onerror="handleImageError(this, '${activeHymnPages[currentImageIndex]}')">
-        </div>`;
-}
-
-function handleImageError(img, url) {
-    if (!img.getAttribute('data-retry') && url.endsWith('.jpg')) {
-        img.setAttribute('data-retry', '1');
-        img.src = url.replace('.jpg', '.png');
+function renderPage(){
+    if(!activeHymnPages || activeHymnPages.length === 0) {
+        document.getElementById("scoreViewer").innerHTML = "";
         return;
     }
-    img.style.display = 'none';
+    
+    const currentImageUrl = activeHymnPages[currentImageIndex];
+    const isFirst = currentImageIndex === 0;
+    const isLast = currentImageIndex === activeHymnPages.length - 1;
+
+    document.getElementById("scoreViewer").innerHTML = `
+        <div class="card">
+            <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px;">
+                <button onclick="previousPage()" ${isFirst ? 'disabled' : ''}>← Previous Page</button>
+                <button disabled style="background:#007aff; opacity: 1; color: white;">Sheet Viewer (${currentImageIndex + 1} / ${activeHymnPages.length})</button>
+                <button onclick="nextPage()" ${isLast ? 'disabled' : ''}>Next Page →</button>
+            </div>
+            <img src="${currentImageUrl}" alt="Hymn Sheet Music View" onerror="handleImageError(this, '${currentImageUrl}')">
+        </div>`;
+    document.getElementById("scoreViewer").scrollIntoView({ behavior:"smooth" });
 }
 
-function nextPage() { if(currentImageIndex < activeHymnPages.length-1) { currentImageIndex++; renderPage(); } }
-function previousPage() { if(currentImageIndex > 0) { currentImageIndex--; renderPage(); } }
+function handleImageError(imgObj, originalUrl) {
+    if (!imgObj.getAttribute('data-retry')) {
+        imgObj.setAttribute('data-retry', '1');
+        if (originalUrl.endsWith('.jpg')) {
+            imgObj.src = originalUrl.replace('.jpg', '.png');
+            return;
+        }
+    }
+    imgObj.style.display = 'none';
+}
 
-window.onload = () => {
-    let html = ""; for(let i=0; i<4; i++) html += `<div class="metro-dot" id="dotM${i}"></div>`;
-    document.getElementById("metroVisualsContainer").innerHTML = html;
-    renderActiveSetlistPills();
-};
+function nextPage(){ if(currentImageIndex < activeHymnPages.length - 1){ currentImageIndex++; renderPage(); } }
+function previousPage(){ if(currentImageIndex > 0){ currentImageIndex--; renderPage(); } }
 </script>
 </body>
 </html>
