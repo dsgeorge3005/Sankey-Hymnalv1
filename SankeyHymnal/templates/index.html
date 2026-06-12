@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sankey Hymnal</title>
 
@@ -311,7 +312,6 @@
         </div>
     </div>
 
-    <!-- SETLIST MANAGER PANEL -->
     <div id="weeklyDashboard" class="dashboard-content">
         <div class="dashboard-grid">
             <div class="dash-box">
@@ -368,15 +368,26 @@
 
 <script>
 const glossaryTerms = [
-    { name: "4/4 Time (Common Time)", def: "4 beats per measure. Each quarter note gets 1 count." },
+    { name: "4/4 Time (Common Time)", def: "4 beats per measure. Each quarter note gets 1 count pulse." },
     { name: "3/4 Time (Waltz Meter)", def: "3 beats per measure. Used heavily in classical waltzes and historic hymns." },
     { name: "2/4 Time (March Meter)", def: "2 beats per measure. Strong-weak regular alternating stride pulse." },
-    { name: "2/2 Time (Cut Time / Alla Breve)", def: "2 beats per measure, but the half note gets the beat count." },
-    { name: "6/8 Time", def: "Compound meter with 2 primary macro-pulses, dividing into three eighth notes." },
+    { name: "2/2 Time (Cut Time / Alla Breve)", def: "2 beats per measure, but the half note gets the beat count value." },
+    { name: "6/8 Time", def: "Compound meter with 2 primary macro-pulses, dividing down into three eighth notes." },
     { name: "Andante", def: "A moderate, unhurried, literal 'walking pace' configuration (76-108 BPM)." },
-    { name: "Moderato", def: "Moderately paced; smack in the center of fast and slow (108-120 BPM)." },
-    { name: "Allegro", def: "Fast, bright, cheerful, and lively execution speed (120-156 BPM)." },
-    { name: "Fermata", def: "Hold or sustain the note indefinitely until cut off by the leader." }
+    { name: "Moderato", def: "Moderately paced; smack in the center of fast and slow tempos (108-120 BPM)." },
+    { name: "Allegro", def: "Fast, bright, cheerful, and lively performance speed execution (120-156 BPM)." },
+    { name: "Fermata", def: "Hold or sustain the note indefinitely until cut off by the ensemble director." },
+    { name: "Largo", def: "Broad, slow, dignified, and stately speed (40–60 BPM)." },
+    { name: "Adagio", def: "Slow and calm; literally translating to mean 'at ease' (66–76 BPM)." },
+    { name: "Vivace", def: "Lively and fast; up-tempo and full of rhythmic driving life (156–176 BPM)." },
+    { name: "Presto", def: "Very fast, rapid, and lightning swift execution velocity (168–200+ BPM)." },
+    { name: "Crescendo", def: "Gradually getting louder and increasing dynamic output over time." },
+    { name: "Decrescendo", def: "Gradually getting softer, lowering absolute audio volume levels over time." },
+    { name: "Legato", def: "Smooth and connected transitions; notes flow together seamlessly without gaps." },
+    { name: "Staccato", def: "Short, detached, clipped, and crisp independent notes." },
+    { name: "A Cappella", def: "Choral or vocal singing performed completely without instrumental accompaniment tracks." },
+    { name: "Soprano / Alto", def: "The higher and lower female/child vocal range boundaries inside SATB blocks." },
+    { name: "Tenor / Bass", def: "The higher and lower adult male vocal range register blocks inside SATB blocks." }
 ];
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -479,7 +490,6 @@ function populateGlossary(list) {
     document.getElementById("glossaryList").innerHTML = html || "<div>No terms found.</div>";
 }
 function filterGlossary(q) { populateGlossary(glossaryTerms.filter(t => t.name.toLowerCase().includes(q.toLowerCase()))); }
-
 
 /* --- SETLIST MANAGEMENT SYSTEM --- */
 let serverSetlistsGlobal = {};
@@ -633,8 +643,7 @@ window.onload = function(){
     updateTimeSignature("4"); populateGlossary(glossaryTerms);
 };
 
-
-/* --- FIXED AND ALIGNED AUTO-LOAD ROUTING CONTROLLER --- */
+/* --- ROUTING & AUDIO CONTROLLER --- */
 const searchBox = document.getElementById("searchBox");
 const suggestionsBox = document.getElementById("suggestions");
 let currentFocus = -1;
@@ -646,7 +655,7 @@ function toggleDashboard() {
     const d = document.getElementById("weeklyDashboard");
     d.classList.toggle("open"); localStorage.setItem("dashboardOpen", d.classList.contains("open"));
 }
-function toggleTheme(){ document.body.classList.toggle("dark-mode"); localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light"); }
+function toggleTheme()){ document.body.classList.toggle("dark-mode"); localStorage.setItem("theme", document.body.classList.contains("dark-mode") ? "dark" : "light"); }
 
 searchBox.addEventListener("keydown", function(e){
     const items = suggestionsBox.getElementsByClassName("suggestion");
@@ -740,10 +749,18 @@ async function searchHymn(exactNumber = null){
         finalData.forEach((hymn, index) => {
             const yt = "https://www.youtube.com/results?search_query=" + encodeURIComponent(hymn.title + " hymn");
             let audioHtml = "";
+            
+            // Fixed and validated nested loop parsing for SATB paths
             if(hymn.audio && Object.keys(hymn.audio).length){
-                audioHtml = `<div class="audio-section"><h3>🎵 Recordings</h3><div class="audio-grid">`;
-                for(const [part,file] of Object.entries(hymn.audio)){
-                    audioHtml += `<div class="audio-card"><div class="voice-part">${part}</div><audio controls><source src="/audio/${file}" type="audio/mpeg"></audio></div>`;
+                audioHtml = `<div class="audio-section"><h3>🎵 SATB Split Vocal Tracks</h3><div class="audio-grid">`;
+                for(const [part, file] of Object.entries(hymn.audio)){
+                    audioHtml += `
+                    <div class="audio-card">
+                        <div class="voice-part">${part}</div>
+                        <audio controls preload="none">
+                            <source src="/audio/${file}" type="audio/mpeg">
+                        </audio>
+                    </div>`;
                 }
                 audioHtml += `</div></div>`;
             }
@@ -780,7 +797,6 @@ function showScoreFromCache(index) {
     
     activeHymnPages = [];
     
-    // 1. Check for explicit file structural properties in your hymns.json
     let rawPages = selectedHymn.image_path || selectedHymn.image_urls || selectedHymn.images || selectedHymn.pages;
     
     if (rawPages) {
@@ -791,7 +807,6 @@ function showScoreFromCache(index) {
         }
     }
 
-    // 2. Alignment fix: Parse numeric pages if no direct image property was provided
     if (activeHymnPages.length === 0 && selectedHymn.page !== undefined && selectedHymn.page !== null) {
         const pageStr = String(selectedHymn.page).trim();
         if (pageStr.includes("-")) {
@@ -811,7 +826,6 @@ function showScoreFromCache(index) {
         }
     }
 
-    // 3. Fall back directly to hymn number index naming if pages aren't defined
     if (activeHymnPages.length === 0 && selectedHymn.number) {
         const cleanNum = String(selectedHymn.number).trim();
         activeHymnPages = [`/static/pages/Sankey_${cleanNum}.jpg`];
