@@ -7,9 +7,9 @@
 
     <style>
     :root {
-        --glass-bg: rgba(20, 20, 25, 0.7);
+        --glass-bg: rgba(20, 20, 25, 0.75);
         --glass-border: rgba(255, 255, 255, 0.06);
-        --glass-shadow: rgba(0, 0, 0, 0.6);
+        --glass-shadow: rgba(0, 0, 0, 0.65);
         --text-color: #f5f5f7;
         --accent-color: #00e676;
         --accent-glow: rgba(0, 230, 118, 0.25);
@@ -37,7 +37,6 @@
         border-radius: 20px;
         box-shadow: 0 12px 40px 0 var(--glass-shadow);
         padding: 24px;
-        transition: transform 0.3s ease;
     }
 
     .container {
@@ -119,6 +118,7 @@
         flex-direction: column;
         background: rgba(15, 15, 20, 0.95);
         z-index: 10;
+        border: 1px solid var(--glass-border);
     }
     .suggestion {
         padding: 14px 20px;
@@ -185,7 +185,7 @@
     }
     .side-drawer.open { right: 0; }
     
-    .piano { display: flex; height: 120px; background: #000; padding: 2px; border-radius: 8px; }
+    .piano { display: flex; height: 120px; background: #000; padding: 2px; border-radius: 8px; position: relative; }
     .white-key { flex: 1; background: #eee; border: 1px solid #999; border-radius: 0 0 4px 4px; cursor: pointer; }
     .white-key:active { background: #bbb; }
     .black-key { position: absolute; width: 6.5%; height: 60%; background: #222; border-radius: 0 0 3px 3px; cursor: pointer; transform: translateX(-50%); }
@@ -199,9 +199,9 @@
 <body>
 
 <div id="musicalDrawer" class="side-drawer glass-panel">
-    <div style="display:flex; justify-content:between; align-items:center;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
         <h2 style="margin:0; font-size:20px;">🎼 Toolkit</h2>
-        <button onclick="toggleDrawer()" style="padding: 6px 12px; margin-left:auto;">✕</button>
+        <button onclick="toggleDrawer()" style="padding: 6px 12px;">✕</button>
     </div>
 
     <div style="display:flex; flex-direction:column; gap:12px;">
@@ -244,6 +244,7 @@
         <button onclick="toggleDrawer()" style="background:rgba(255,255,255,0.05);">🎵 Toolkit</button>
     </div>
 
+    <!-- SETLIST BUILDER PANEL -->
     <div id="weeklyDashboard" style="display:none;">
         <div class="glass-panel">
             <h3 style="margin:0 0 15px 0;">📋 Setlist Configuration</h3>
@@ -270,7 +271,7 @@
     <h1>Sankey Hymnal</h1>
 
     <div class="search-bar">
-        <input id="searchBox" placeholder="Search by compilation index number or title query..." autocomplete="off">
+        <input id="searchBox" placeholder="Search by hymn number or title query..." autocomplete="off">
         <button onclick="searchHymn()">Search</button>
     </div>
     
@@ -280,14 +281,16 @@
 </div>
 
 <script>
-// FULL STRUCTURAL LOCAL DATA RESOURCE REGISTRY
+// BOTH SATB AND NON-SATB HYMNS ARE REGISTERED HERE
 const localHymnsDataset = [
   { "number": "1", "title": "Praise, My Soul, The King Of Heaven!", "page": "1", "hasSATB": true },
   { "number": "2", "title": "A Mighty Fortress Is Our God", "page": "2", "hasSATB": false },
-  { "number": "3", "title": "A Safe Stronghold", "page": "2", "hasSATB": false },
-  { "number": "4", "title": "O Worship the Lord in the Beauty of Holiness", "page": "3", "hasSATB": false },
+  { "number": "3", "title": "A Safe Stronghold", "page": "3", "hasSATB": false },
+  { "number": "4", "title": "O Worship the Lord in the Beauty of Holiness", "page": "4", "hasSATB": false },
   { "number": "10", "title": "Day by Day the manna fell", "page": "10", "hasSATB": true },
   { "number": "11", "title": "Oh, Worship the King", "page": "11", "hasSATB": true },
+  { "number": "100", "title": "Great Is Thy Faithfulness", "page": "100", "hasSATB": false },
+  { "number": "101", "title": "All Hail the Power of Jesus' Name", "page": "101", "hasSATB": false },
   { "number": "102", "title": "Hallelujah What a Savior", "page": "102", "hasSATB": true },
   { "number": "111", "title": "Joy to the World", "page": "111", "hasSATB": true },
   { "number": "112", "title": "How Sweet the Name", "page": "112", "hasSATB": true },
@@ -305,6 +308,7 @@ let activeOctave = 4;
 const baseFrequencies = { 'C':16.35, 'C#':17.32, 'D':18.35, 'D#':19.45, 'E':20.60, 'F':21.83, 'F#':23.12, 'G':24.50, 'G#':25.96, 'A':27.50, 'A#':29.14, 'B':30.87, 'C2':32.70 };
 
 function playTone(note) {
+    if(audioCtx.state === 'suspended') audioCtx.resume();
     let fundamental = baseFrequencies[note] * Math.pow(2, activeOctave);
     let now = audioCtx.currentTime;
     let gain = audioCtx.createGain();
@@ -335,7 +339,7 @@ function startMetronome() {
 function stopMetronome() { isMetroRunning = false; clearInterval(metroInterval); document.getElementById("metroBtn").innerText = "▶ Start"; currentBeat = 0; }
 
 /* CONFIGURATION MANAGEMENT SELECTION PLATES */
-let mockSetlists = { "1": ["1", "10"], "2": [] };
+let mockSetlists = { "1": ["1", "2"], "2": [] };
 function renderActiveSetlistPills() {
     const setNum = document.getElementById("setlistNumSelect").value;
     const hymns = mockSetlists[setNum] || [];
@@ -400,7 +404,6 @@ function searchHymn(targetNum = null) {
         const ytUrl = "https://www.youtube.com/results?search_query=" + encodeURIComponent(hymn.title + " sankey hymn");
         let audioHtml = "";
 
-        // Only generate audio UI panels if the hymn actually contains SATB tracks
         if (hymn.hasSATB) {
             const partsMap = {
                 "Full Ensemble SATB": `${hymn.number}-SATB-${hymn.title}.mp3`,
@@ -420,6 +423,9 @@ function searchHymn(targetNum = null) {
                     </div>`;
             }
             audioHtml += `</div></div>`;
+        } else {
+            // Placeholder notice ensuring the layout stays complete for songs without backing tracks
+            audioHtml = `<div class="audio-section" style="opacity: 0.5;"><p>ℹ️ No SATB learning tracks available for this selection.</p></div>`;
         }
 
         html += `
@@ -438,15 +444,14 @@ function searchHymn(targetNum = null) {
     calculateAndShowScore(0);
 }
 
-/* DYNAMIC ALLOCATION RESOLVER FOR STATIC / PAGES2 ROUTING BOUNDARIES */
+/* DYNAMIC DIRECTORY ROUTING AND RANGE PARSER (`pages` vs `pages2`) */
 function calculateAndShowScore(index) {
     let hymn = searchResultsCache[index];
     if(!hymn) return;
     
     activeHymnPages = [];
-    const pageVal = parseInt(hymn.page, 10);
     
-    // Check if pages span multiple boundaries (e.g., 2-3)
+    // Check if the page contains a structural layout range separator dashboard (e.g., "12-14")
     if (String(hymn.page).includes("-")) {
         let ranges = String(hymn.page).split("-");
         let start = parseInt(ranges[0], 10);
@@ -456,7 +461,7 @@ function calculateAndShowScore(index) {
             activeHymnPages.push(`/static/${targetFolder}/Sankey_${p}.jpg`);
         }
     } else {
-        // Single page entry allocation rule pathing logic
+        let pageVal = parseInt(hymn.page, 10);
         let targetFolder = (pageVal > 1000) ? "pages2" : "pages";
         activeHymnPages.push(`/static/${targetFolder}/Sankey_${pageVal}.jpg`);
     }
